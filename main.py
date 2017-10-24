@@ -16,20 +16,23 @@ rank_path = "card_images"
 ranks = cards.load_ranks(rank_path)
 
 # Get next image of playing area
-img = cv2.imread(os.path.join('game_images', 'transformed1.png'))
+img = cv2.imread(os.path.join('game_images', 'transformed.png'))
 
 # Get a list of all of the contours around cards
-all_cards = cards.get_card_contours(img)
+all_cards = cards.findCards(img)
 
 for i in range(len(all_cards)):
 
     # Produce a top-down image of each card
-    all_cards[i] = cards.process_card(all_cards[i], img)
+    all_cards[i] = cards.processCard(all_cards[i], img)
 
-    # Use template matching to get the rank of the card
+    # Find the best rank match for this card
+    all_cards[i].matchRank(ranks)
 
-    """
-    cv2.imshow("This card image", all_cards[i].img)
-    cv2.waitKey(0)
-    cv2.destroyAllWindows()
-    """ 
+    print(all_cards[i].best_rank_match)
+
+# Create a copy of the image for display
+img_disp = copy.deepcopy(img)
+cv2.drawContours(rank_col, cnts, 0, (0,255,0), 2)
+cv2.imshow("Detected Cards", img_disp); cv2.waitKey(0); cv2.destroyAllWindows()
+
