@@ -3,10 +3,12 @@
 ### Import necessary packages
 import os
 import cv2
+import copy
 import cards
 
 ### Constants
 rank_path = "card_images"
+font = cv2.FONT_HERSHEY_SIMPLEX
 
 ### Structures
 
@@ -24,15 +26,14 @@ all_cards = cards.findCards(img)
 for i in range(len(all_cards)):
 
     # Produce a top-down image of each card
-    all_cards[i] = cards.processCard(all_cards[i], img)
+    all_cards[i].processCard(img)
 
     # Find the best rank match for this card
-    all_cards[i].matchRank(ranks)
+    all_cards[i].matchRank(ranks, cards.TEMPLATE_MATCHING)
 
-    print(all_cards[i].best_rank_match)
-
-# Create a copy of the image for display
-img_disp = copy.deepcopy(img)
-cv2.drawContours(rank_col, cnts, 0, (0,255,0), 2)
-cv2.imshow("Detected Cards", img_disp); cv2.waitKey(0); cv2.destroyAllWindows()
+    # Create a copy of the image for display
+    cv2.drawContours(img_disp, [all_cards[i].contour], 0, (0,255,0), 2)
+    text_pos = (all_cards[i].center[0], all_cards[i].center[1])
+    cv2.putText(img_disp, all_cards[i].best_rank_match, text_pos, font, 0.5, (255,0,0), 1, cv2.LINE_AA)
+    cv2.imshow("Detected Cards", img_disp); cv2.waitKey(0); cv2.destroyAllWindows()
 

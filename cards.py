@@ -32,6 +32,14 @@ TEMPLATE_MATCHING = 1
 
 ### Structures ###
 
+class rank:
+    """Structure to store information about each card rank."""
+
+    def __init__(self):
+        self.name = "rank_name"
+        self.img = [] # Thresholded image of card rank
+        self.contour = [] # Contour of rank
+
 class card:
     """Structure to store information about cards in the camera image."""
 
@@ -41,41 +49,85 @@ class card:
         self.center = [] # Center point of card
         self.img = [] # 200x300, flattened, grayed, blurred image
         self.rank_img = [] # Thresholded, sized image of card's rank
+        self.rank_contour = [] # Contour of the rank
         self.best_rank_match = "Unknown" # Best matched rank
         self.rank_score = 0 # Difference between rank image and best matched train rank image
 
-    def matchRank(self, all_ranks):
+    def processCard(self, image):
+        """ This function takes an image and contour associated with a card and returns a top-down image of the card """
+
+        # Find width and height of card's bounding rectangle
+        x, y, w, h = cv2.boundingRect(self.contour)
+        self.width, self.height = w, h
+
+        # Find the centre of the card
+        pts = self.corner_pts
+        average = np.sum(pts, axis=0)/len(pts)
+        cent_x = int(average[0][0])
+        cent_y = int(average[0][1])
+        self.center = [cent_x, cent_y]
+
+        # Create a flattened image of the isolated card
+        self.img = flattener(image, pts, w, h)
+        #cv2.imshow("This card flattened", self.img); cv2.waitKey(0); cv2.destroyAllWindows()
+
+        # Crop the corner from the card
+        rank_img = self.img[0:CORNER_HEIGHT, 0:CORNER_WIDTH]
+        rank_img_padded = np.pad(rank_img, 5, 'constant', constant_values=255)
+        #cv2.imshow("This rank", rank_img_padded); cv2.waitKey(0); cv2.destroyAllWindows()
+
+        # Thresholding using Otsu's method
+        #plt.hist(rank_img.ravel(),256,[0,256]); plt.show() # Check if the image is bimodal
+        (_, thresh) = cv2.threshold(rank_img_padded, 0, 255, cv2.THRESH_BINARY+cv2.THRESH_OTSU)
+        thresh = cv2.bitwise_not(thresh)
+        #cv2.imshow("This card thresh", thresh); cv2.waitKey(0); cv2.destroyAllWindows()
+
+        # Image Erosion
+        """
+        kernel = np.ones((5,5), np.uint8)
+        erosion = cv2.erode(thresh, kernel, iterations = 1)
+        cv2.imshow("This card eroded", erosion); cv2.waitKey(0); cv2.destroyAllWindows()
+        """
+
+        # Find the largest contour
+        temp_thresh = copy.deepcopy(thresh)
+        (_, this_rank_cnts, _) = cv2.findContours(temp_thresh, cv2.RETR_TREE, cv2.CHAIN_APPROX_SIMPLE)
+        this_rank_cnts = sorted(this_rank_cnts, key=cv2.contourArea,reverse=True)
+
+        # Get the bounding box around the rank, and resize to the template size
+        if len(this_rank_cnts) != 0:
+            ### Debugging ###
+            """
+            rank_col = cv2.cvtColor(rank_img_padded, cv2.COLOR_GRAY2BGR)	
+            cv2.drawContours(rank_col, this_rank_cnts, 0, (0,255,0), 3)
+            cv2.imshow("Largest Rank Contour", rank_col); cv2.waitKey(0); cv2.destroyAllWindows()  
+            """
+            self.rank_contour = this_rank_cnts[0]
+            x1,y1,w1,h1 = cv2.boundingRect(this_rank_cnts[0])
+            rank_crop = thresh[y1:y1+h1, x1:x1+w1]
+            self.rank_img = cv2.resize(rank_crop, (RANK_WIDTH,RANK_HEIGHT), 0, 0)
+            #cv2.imshow("Cropped Rank", self.rank_img); cv2.waitKey(0); cv2.destroyAllWindows()
+            #cv2.imwrite('img.png', self.rank_img)
+
+    def matchRank(self, all_ranks, match_method):
         """ This function returns the best rank match of a given card image """
         
         # List to store rank match scores
         match_scores = [];
-
-        rank_card = cv2.cvtColor(self.img, cv2.COLOR_GRAY2BGR)	
-        cv2.drawContours(rank_card, self.contour, 0, (0,255,0), 3)
-        cv2.imshow("option", rank_card)
-
+        
         for i in range(len(all_ranks)):
-
-            rank_col = cv2.cvtColor(all_ranks[i].img, cv2.COLOR_GRAY2BGR)	
-            cv2.drawContours(rank_col, all_ranks[i].contour, 0, (255,0,0), 3)
-            cv2.imshow("option", rank_col); cv2.waitKey(0); cv2.destroyAllWindows()
-
-            # Compare contours of the card with the template       
-            match_scores.append(cv2.matchShapes(self.contour, all_ranks[i].contour, 1, 0.0))
-
+            if match_method is HU_MOMENTS:
+                # Compare contours of the card with the template       
+                match_scores.append(cv2.matchShapes(self.contour, all_ranks[i].contour, 1, 0.0))
+            
+            elif match_method is TEMPLATE_MATCHING:
+                # Difference the card with the template
+                diff_img = cv2.absdiff(self.rank_img, all_ranks[i].img)
+                match_scores.append(int(np.sum(diff_img)/255))    
+    
         ind = np.argmin(match_scores)
-        self.best_rank_match = all_ranks[i].name
+        self.best_rank_match = all_ranks[ind].name
         self.rank_score = match_scores[ind]
-
-        return 0
-
-class rank:
-    """Structure to store information about each card rank."""
-
-    def __init__(self):
-        self.name = "rank_name"
-        self.img = [] # Thresholded image of card rank
-        self.contour = [] # Contour of rank
 
 ### Functions ###
 
@@ -160,64 +212,6 @@ def findCards(image):
 
     return card_info
 
-def processCard(this_card, image):
-    """ This function takes an image and contour associated with a card and returns a top-down image of the card """
-
-    # Find width and height of card's bounding rectangle
-    x, y, w, h = cv2.boundingRect(this_card.contour)
-    this_card.width, this_card.height = w, h
-
-    # Find the centre of the card
-    pts = this_card.corner_pts
-    average = np.sum(pts, axis=0)/len(pts)
-    cent_x = int(average[0][0])
-    cent_y = int(average[0][1])
-    this_card.center = [cent_x, cent_y]
-
-    # Create a flattened image of the isolated card
-    this_card.img = flattener(image, pts, w, h)
-    #cv2.imshow("This card flattened", this_card.img); cv2.waitKey(0); cv2.destroyAllWindows()
-
-    # Crop the corner from the card
-    rank_img = this_card.img[0:CORNER_HEIGHT, 0:CORNER_WIDTH]
-    rank_img_padded = np.pad(rank_img, 5, 'constant', constant_values=255)
-    #cv2.imshow("This rank", rank_img_padded); cv2.waitKey(0); cv2.destroyAllWindows()
-
-    # Thresholding using Otsu's method
-    #plt.hist(rank_img.ravel(),256,[0,256]); plt.show() # Check if the image is bimodal
-    (_, thresh) = cv2.threshold(rank_img_padded, 0, 255, cv2.THRESH_BINARY+cv2.THRESH_OTSU)
-    thresh = cv2.bitwise_not(thresh)
-    #cv2.imshow("This card thresh", thresh); cv2.waitKey(0); cv2.destroyAllWindows()
-
-    # Image Erosion
-    """
-    kernel = np.ones((5,5), np.uint8)
-    erosion = cv2.erode(thresh, kernel, iterations = 1)
-    cv2.imshow("This card eroded", erosion); cv2.waitKey(0); cv2.destroyAllWindows()
-    """
-
-    # Find the largest contour
-    temp_thresh = copy.deepcopy(thresh)
-    (_, this_rank_cnts, _) = cv2.findContours(temp_thresh, cv2.RETR_TREE, cv2.CHAIN_APPROX_SIMPLE)
-    this_rank_cnts = sorted(this_rank_cnts, key=cv2.contourArea,reverse=True)
-
-    # Get the bounding box around the rank, and resize to the template size
-    if len(this_rank_cnts) != 0:
-        ### Debugging ###
-        """
-        rank_col = cv2.cvtColor(rank_img_padded, cv2.COLOR_GRAY2BGR)	
-        cv2.drawContours(rank_col, this_rank_cnts, 0, (0,255,0), 3)
-        cv2.imshow("Largest Rank Contour", rank_col); cv2.waitKey(0); cv2.destroyAllWindows()  
-        """
-
-        x1,y1,w1,h1 = cv2.boundingRect(this_rank_cnts[0])
-        rank_crop = thresh[y1:y1+h1, x1:x1+w1]
-        this_card.rank_img = cv2.resize(rank_crop, (RANK_WIDTH,RANK_HEIGHT), 0, 0)
-        #cv2.imshow("Cropped Rank", this_card.rank_img); cv2.waitKey(0); cv2.destroyAllWindows()
-        #cv2.imwrite('img.png', this_card.rank_img)
-
-    return this_card
-
 def load_ranks(path):
     """ Load rank images from a specified path. Store rank images in a list of rank objects """
 
@@ -235,7 +229,7 @@ def load_ranks(path):
         new_rank.img = cv2.imread(img_path, cv2.IMREAD_GRAYSCALE)
 
         # Store the name
-        new_rank.rank = name
+        new_rank.name = name
 
         # Store the largest contour
         temp = copy.deepcopy(new_rank.img)
