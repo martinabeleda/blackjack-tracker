@@ -10,7 +10,7 @@ from matplotlib import pyplot as plt
 ### Constants ###
 
 # Card dimensions
-CARD_MAX_AREA = 6000
+CARD_MAX_AREA = 30000
 CARD_MIN_AREA = 3500
 
 CORNER_HEIGHT = 80
@@ -106,15 +106,15 @@ class card:
             x1,y1,w1,h1 = cv2.boundingRect(this_rank_cnts[0])
             rank_crop = thresh[y1:y1+h1, x1:x1+w1]
             self.rank_img = cv2.resize(rank_crop, (RANK_WIDTH,RANK_HEIGHT), 0, 0)
-            #cv2.imshow("Cropped Rank", self.rank_img); cv2.waitKey(0); cv2.destroyAllWindows()
-            #cv2.imwrite('img.png', self.rank_img)
+            cv2.imshow("Cropped Rank", self.rank_img); cv2.waitKey(0); cv2.destroyAllWindows()
+            cv2.imwrite('img.png', self.rank_img)
 
     def matchRank(self, all_ranks, match_method):
         """ This function returns the best rank match of a given card image """
         
         # List to store rank match scores
         match_scores = [];
-        
+
         for i in range(len(all_ranks)):
             if match_method is HU_MOMENTS:
                 # Compare contours of the card with the template       
@@ -128,6 +128,9 @@ class card:
         ind = np.argmin(match_scores)
         self.best_rank_match = all_ranks[ind].name
         self.rank_score = match_scores[ind]
+
+        #print(self.best_rank_match)
+        #cv2.imshow("Cropped Rank", self.rank_img); cv2.waitKey(0); cv2.destroyAllWindows()
 
 ### Functions ###
 
@@ -216,8 +219,7 @@ def load_ranks(path):
     """ Load rank images from a specified path. Store rank images in a list of rank objects """
 
     ranks = []
-    #rank_names = ['Ace', Two', 'Three', 'Four', 'Five', 'Six', 'Seven', 'Eight', 'Nine', 'Ten', 'Jack', 'Queen', 'King']
-    rank_names = ['Two', 'Three', 'Five', 'Six', 'Seven', 'Eight', 'Nine', 'Ten', 'Jack', 'Queen', 'King']
+    rank_names = ['Ace', 'Two', 'Three', 'Four', 'Five', 'Six', 'Seven', 'Eight', 'Nine', 'Ten', 'Jack', 'Queen', 'King']
 
     for name in rank_names:
 
