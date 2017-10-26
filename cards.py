@@ -10,8 +10,8 @@ from matplotlib import pyplot as plt
 ### Constants ###
 
 # Card dimensions
-CARD_MAX_AREA = 30000
-CARD_MIN_AREA = 3500
+CARD_MAX_AREA = 100000
+CARD_MIN_AREA = 2000
 
 CORNER_HEIGHT = 80
 CORNER_WIDTH = 50
@@ -20,14 +20,13 @@ RANK_HEIGHT = 125
 RANK_WIDTH = 70
 
 # Polymetric approximation accuracy scaling factor
-POLY_ACC_CONST = 0.01
-
-# Threshold levels
-CARD_THRESH = 200
+POLY_ACC_CONST = 0.02
 
 # Matching algorithms
 HU_MOMENTS = 0
 TEMPLATE_MATCHING = 1
+
+MAX_MATCH_SCORE = 1500
 
 ### Structures ###
 
@@ -58,13 +57,16 @@ class card:
         # Find width and height of card's bounding rectangle
         x, y, w, h = cv2.boundingRect(self.contour)
         self.width, self.height = w, h
+        #temp = copy.deepcopy(image)
+        #cv2.rectangle(temp,(x,y),(x+w,y+h),(0,255,0),2)
+        #cv2.imshow("This card bbox", temp); cv2.waitKey(0); cv2.destroyAllWindows()
 
         # Find the centre of the card
         pts = self.corner_pts
         average = np.sum(pts, axis=0)/len(pts)
         cent_x = int(average[0][0])
         cent_y = int(average[0][1])
-        self.center = [cent_x, cent_y]
+        self.center = [cent_x, cent_y]   
 
         # Create a flattened image of the isolated card
         self.img = flattener(image, pts, w, h)
@@ -81,13 +83,6 @@ class card:
         thresh = cv2.bitwise_not(thresh)
         #cv2.imshow("This card thresh", thresh); cv2.waitKey(0); cv2.destroyAllWindows()
 
-        # Image Erosion
-        """
-        kernel = np.ones((5,5), np.uint8)
-        erosion = cv2.erode(thresh, kernel, iterations = 1)
-        cv2.imshow("This card eroded", erosion); cv2.waitKey(0); cv2.destroyAllWindows()
-        """
-
         # Find the largest contour
         temp_thresh = copy.deepcopy(thresh)
         (_, this_rank_cnts, _) = cv2.findContours(temp_thresh, cv2.RETR_TREE, cv2.CHAIN_APPROX_SIMPLE)
@@ -95,12 +90,7 @@ class card:
 
         # Get the bounding box around the rank, and resize to the template size
         if len(this_rank_cnts) != 0:
-            ### Debugging ###
-            """
-            rank_col = cv2.cvtColor(rank_img_padded, cv2.COLOR_GRAY2BGR)	
-            cv2.drawContours(rank_col, this_rank_cnts, 0, (0,255,0), 3)
-            cv2.imshow("Largest Rank Contour", rank_col); cv2.waitKey(0); cv2.destroyAllWindows()  
-            """
+            
             self.rank_contour = this_rank_cnts[0]
             x1,y1,w1,h1 = cv2.boundingRect(this_rank_cnts[0])
             rank_crop = thresh[y1:y1+h1, x1:x1+w1]
@@ -125,12 +115,11 @@ class card:
                 diff_img = cv2.absdiff(self.rank_img, all_ranks[i].img)
                 match_scores.append(int(np.sum(diff_img)/255))    
     
-        ind = np.argmin(match_scores)
-        self.best_rank_match = all_ranks[ind].name
+        ind = np.argmin(match_scores)      
         self.rank_score = match_scores[ind]
 
-        #print(self.best_rank_match)
-        #cv2.imshow("Cropped Rank", self.rank_img); cv2.waitKey(0); cv2.destroyAllWindows()
+        if self.rank_score < MAX_MATCH_SCORE:
+            self.best_rank_match = all_ranks[ind].name
 
 ### Functions ###
 
@@ -189,16 +178,10 @@ def findCards(image):
 
     # Gaussian blur
     blur = cv2.GaussianBlur(gray, (5,5), 0)
-    #cv2.imshow("Blurred playing area", blur); cv2.waitKey(0); cv2.destroyAllWindows()
 
-    # Use adaptive threshold or Otsu's method
-    # https://docs.opencv.org/3.1.0/d7/d4d/tutorial_py_thresholding.html
-    thresh_level = CARD_THRESH
-    
-    # Threshold gaussian filtered image
-    (_, thresh) = cv2.threshold(blur, thresh_level, 255, cv2.THRESH_BINARY)
-
-    ### Debugging ###
+    # Threshold with Otsu's method
+    #plt.hist(blur.ravel(),256,[0,256]); plt.show() # Check if the image is bimodal
+    (_, thresh) = cv2.threshold(blur, 0, 255, cv2.THRESH_BINARY+cv2.THRESH_OTSU)
     #cv2.imshow("Thresholded playing area", thresh); cv2.waitKey(0); cv2.destroyAllWindows()
 
     # Find contours and sort by size
@@ -212,10 +195,7 @@ def findCards(image):
         cnts_sort = []
         hier_sort = []
 
-        # Fill empty lists with sorted contour and sorted hierarchy. Now,
-        # the indices of the contour list still correspond with those of
-        # the hierarchy list. The hierarchy array can be used to check if
-        # the contours have parents or not.
+        # Fill empty lists with sorted contour and sorted hierarchy. 
         for i in index_sort:
             cnts_sort.append(cnts[i])
             hier_sort.append(hier[0][i])  
@@ -226,8 +206,7 @@ def findCards(image):
             # Get the size of the cards
             size = cv2.contourArea(cnts_sort[i])
 
-            # Use the perimeter of the card to set the accuracy parameter of
-            # the polymetric approximation
+            # Use the perimeter of the card to set the accuracy parameter of the polymetric approximation
             peri = cv2.arcLength(cnts_sort[i],True)
             accuracy = POLY_ACC_CONST*peri    
 
@@ -237,20 +216,20 @@ def findCards(image):
             # Cards are determined to have an area within a given range,
             # have 4 corners and have no parents
             if ((size < CARD_MAX_AREA) and (size > CARD_MIN_AREA) 
-                and (len(approx) == 4) and (hier_sort[i][3] == -1)):                
+                and (len(approx) == 4)):# and (hier_sort[i][3] == -1)):                
                 new_card = card()
                 new_card.contour = cnts_sort[i]  
                 new_card.corner_pts = np.float32(approx)
 
                 # Add the new card to the list
                 card_info.append(new_card)
-                
+
                 ### Debugging ###
                 """
                 print('size = {}, acc = {}, numCorners = {}'.format(size, accuracy, len(approx)))
                 temp_img = copy.deepcopy(image)
                 cv2.drawContours(temp_img, cnts_sort, i, (0,255,0), 3)
-                cv2.imshow("This Card Contour", temp_img); cv2.waitKey(0); cv2.destroyAllWindows()  
+                cv2.imshow("This Card Contour", temp_img); cv2.waitKey(0); cv2.destroyAllWindows()
                 """
 
     # If there are no contours, do nothing
@@ -313,7 +292,6 @@ def flattener(image, pts, w, h):
     # Need to create an array listing points in order of
     # [top left, top right, bottom right, bottom left]
     # before doing the perspective transform
-
     if w <= 0.8*h: # If card is vertically oriented
         temp_rect[0] = tl
         temp_rect[1] = tr
@@ -325,7 +303,7 @@ def flattener(image, pts, w, h):
         temp_rect[1] = tl
         temp_rect[2] = tr
         temp_rect[3] = br
-
+        
     # If the card is 'diamond' oriented, a different algorithm
     # has to be used to identify which point is top left, top right
     # bottom left, and bottom right.
@@ -340,7 +318,7 @@ def flattener(image, pts, w, h):
             temp_rect[1] = pts[0][0] # Top right
             temp_rect[2] = pts[3][0] # Bottom right
             temp_rect[3] = pts[2][0] # Bottom left
-
+            
         # If furthest left point is lower than furthest right point,
         # card is tilted to the right
         if pts[1][0][1] > pts[3][0][1]:
@@ -350,7 +328,7 @@ def flattener(image, pts, w, h):
             temp_rect[1] = pts[3][0] # Top right
             temp_rect[2] = pts[2][0] # Bottom right
             temp_rect[3] = pts[1][0] # Bottom left     
-        
+            
     maxWidth = 200
     maxHeight = 300
 
