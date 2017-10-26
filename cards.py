@@ -24,7 +24,6 @@ POLY_ACC_CONST = 0.01
 
 # Threshold levels
 CARD_THRESH = 200
-RANK_THRESH = 30
 
 # Matching algorithms
 HU_MOMENTS = 0
@@ -105,9 +104,10 @@ class card:
             self.rank_contour = this_rank_cnts[0]
             x1,y1,w1,h1 = cv2.boundingRect(this_rank_cnts[0])
             rank_crop = thresh[y1:y1+h1, x1:x1+w1]
+
             self.rank_img = cv2.resize(rank_crop, (RANK_WIDTH,RANK_HEIGHT), 0, 0)
-            cv2.imshow("Cropped Rank", self.rank_img); cv2.waitKey(0); cv2.destroyAllWindows()
-            cv2.imwrite('img.png', self.rank_img)
+            #cv2.imshow("Cropped Rank", self.rank_img); cv2.waitKey(0); cv2.destroyAllWindows()
+            #cv2.imwrite('img.png', self.rank_img)
 
     def matchRank(self, all_ranks, match_method):
         """ This function returns the best rank match of a given card image """
@@ -133,6 +133,50 @@ class card:
         #cv2.imshow("Cropped Rank", self.rank_img); cv2.waitKey(0); cv2.destroyAllWindows()
 
 ### Functions ###
+
+def main():
+    """ Run the card detector module by itself """
+    
+    cap = cv2.VideoCapture(0)
+    cap.set(cv2.CAP_PROP_FRAME_WIDTH,9999)
+    cap.set(cv2.CAP_PROP_FRAME_HEIGHT,9999)
+
+    # Load the card rank images into a list of rank objects
+    rank_path = "card_images"
+    ranks = load_ranks(rank_path)
+
+    while(True):
+
+        # Get the next frame    
+        flag, img = cap.read()
+        
+        # Get a list of all of the contours around cards
+        all_cards = findCards(img)
+        img_disp = copy.deepcopy(img)
+
+        for i in range(len(all_cards)):
+
+            # Produce a top-down image of each card
+            all_cards[i].processCard(img)
+
+            # Find the best rank match for this card
+            all_cards[i].matchRank(ranks, TEMPLATE_MATCHING)
+
+            # Draw on the temporary image
+            cv2.drawContours(img_disp, [all_cards[i].contour], 0, (0,255,0), 2)
+            text_pos = (all_cards[i].center[0], all_cards[i].center[1])
+            cv2.putText(img_disp, all_cards[i].best_rank_match, text_pos, font, 0.5, (255,0,0), 1, cv2.LINE_AA)
+        
+        # Show the display image
+        cv2.imshow("Detected Cards", img_disp)
+
+        if cv2.waitKey(1) & 0xFF == ord('q'):
+            break
+
+    # When everything done, release the capture
+    cap.release()
+    cv2.destroyAllWindows()
+
 
 def findCards(image):
     """ This function takes an images and returns a list of card objects with contour and corner info """
@@ -318,3 +362,7 @@ def flattener(image, pts, w, h):
     warp = cv2.cvtColor(warp,cv2.COLOR_BGR2GRAY)        
 
     return warp
+
+### Cards Module Test Code ###
+if __name__ == "__main__":
+    main()
