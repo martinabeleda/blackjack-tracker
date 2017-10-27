@@ -17,7 +17,6 @@ ranks = cards.load_ranks(rank_path)
 
 # Get next image of playing area
 img = cv2.imread(os.path.join('game_images', 'transformed_small2.png'))
-img_disp = copy.deepcopy(img)
 
 # Get a list of all of the contours around cards
 all_cards = cards.findCards(img)
@@ -29,11 +28,12 @@ for i in range(len(all_cards)):
 
     # Find the best rank match for this card
     all_cards[i].matchRank(ranks, cards.TEMPLATE_MATCHING)
+    img_disp = copy.deepcopy(img)
 
     # Draw on the temporary image
     cv2.drawContours(img_disp, [all_cards[i].contour], 0, (0,255,0), 2)
     text_pos = (all_cards[i].center[0], all_cards[i].center[1])
     cv2.putText(img_disp, all_cards[i].best_rank_match, text_pos, font, 0.5, (255,0,0), 1, cv2.LINE_AA)
 
-# Show the display image    
-cv2.imshow("Detected Cards", img_disp); cv2.waitKey(0); cv2.destroyAllWindows()
+    # Show the display image    
+    cv2.imshow("Detected Cards", img_disp); cv2.waitKey(0); cv2.destroyAllWindows()
