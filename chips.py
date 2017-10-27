@@ -109,7 +109,7 @@ def drawChips(image, all_chips):
         
         #cv2.drawContours(image, [all_chips[i].contour], 0, dp.CYAN, 2)
         cv2.circle(image, all_chips[i].center, all_chips[i].radius, dp.CYAN, 2)
-        
+
     return image
 
 ### Test Functions
@@ -125,11 +125,12 @@ def videoTest():
 
         # Get the next frame    
         flag, img = cap.read()
-        
-        # Get a list of all of the contours around cards
-        chip_cnts = findChips(img)
         img_disp = copy.deepcopy(img)
 
+        # Find all of the chips and draw them on the temp image
+        all_chips = detectChips(img)
+        img_disp = drawChips(img_disp, all_chips)
+        
         # Show the display image
         cv2.imshow("Detected Chips", img_disp)
         
