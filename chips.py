@@ -9,13 +9,21 @@ import numpy as np
 import display as dp
 from matplotlib import pyplot as plt
 
-def findChips(img):
+### Constants
+MAX_NORM_DIFF = 0.17
+MIN_CHIP_AREA = 1000
+MAX_CHIP_AREA = 8000
+
+### Public Functions ###
+
+def detectChips(image):
     """ Returns contours of the chips in an image """
 
+    # List to store all valid chips
     chip_cnts = []
 
     # Pre-processing
-    gray = cv2.cvtColor(img, cv2.COLOR_BGR2GRAY)	
+    gray = cv2.cvtColor(image, cv2.COLOR_BGR2GRAY)	
     blur = cv2.GaussianBlur(gray, (5,5), 0)
     #cv2.imshow("blurred image", blur); cv2.waitKey(0); cv2.destroyAllWindows()
 
@@ -24,49 +32,51 @@ def findChips(img):
     #cv2.imshow("Thresholded playing area", thresh); cv2.waitKey(0); cv2.destroyAllWindows()
 
     # Morphological closing
-    kernel = cv2.getStructuringElement(cv2.MORPH_ELLIPSE, (20,20))
+    kernel = cv2.getStructuringElement(cv2.MORPH_ELLIPSE, (15,15))
     closing = cv2.morphologyEx(thresh, cv2.MORPH_CLOSE, kernel)
-    cv2.imshow("Closing", closing); cv2.waitKey(0); cv2.destroyAllWindows()
-
-    # Morphological dilation
-    """
-    kernel = cv2.getStructuringElement(cv2.MORPH_ELLIPSE, (10,10))
-    dilation = cv2.dilate(closing,kernel,iterations = 1)
-    cv2.imshow("Closing", dilation); cv2.waitKey(0); cv2.destroyAllWindows()
-    """
+    #cv2.imshow("Closing", closing); cv2.waitKey(0); cv2.destroyAllWindows()
 
     # Find contours and sort by size
-    (_, cnts, _) = cv2.findContours(thresh, cv2.RETR_TREE, cv2.CHAIN_APPROX_SIMPLE)
+    (_, cnts, hier) = cv2.findContours(closing, cv2.RETR_TREE, cv2.CHAIN_APPROX_SIMPLE)
     index_sort = sorted(range(len(cnts)), key=lambda i : cv2.contourArea(cnts[i]),reverse=True)
+
+    # Initialize empty sorted contour and hierarchy lists
+    cnts_sort = []
+    hier_sort = []
 
     # Catch cases where no contours were detected
     try:
-
-        # Initialize empty sorted contour and hierarchy lists
-        cnts_sort = []
-        hier_sort = []
 
         # Fill empty lists with sorted contour and sorted hierarchy. 
         for i in index_sort:
             cnts_sort.append(cnts[i])
             hier_sort.append(hier[0][i])  
 
-        for i in range(len(cnts)):
+        for i in range(len(cnts_sort)):
         
-            area = cv2.contourArea(cnts[i])
-            perimeter = cv2.arcLength(cnts[i],True)
-
+            # Get the radius according to the area
+            area = cv2.contourArea(cnts_sort[i])
             r1 = math.sqrt(area/math.pi)
+
+            # Get the radius according to the perimeter
+            perimeter = cv2.arcLength(cnts_sort[i],True)   
             r2 = perimeter/(2*math.pi)
+
+            # Normalise the difference
             diff = abs(r1-r2)
-            norm_diff = diff/np.mean([r1, r2])    
+            norm_diff = diff/np.mean([r1, r2])
 
-            print('Diff = {}, Norm Diff = {}, Card {}'.format(abs(r1-r2), ))
+            #print('area = {}, norm diff = {}'.format(area, norm_diff))
+            #img_disp = copy.deepcopy(image)
+            #cv2.drawContours(img_disp, [cnts_sort[i]], 0, dp.CYAN, 3)
+            #cv2.imshow("Detected Chips", img_disp); cv2.waitKey(0); cv2.destroyAllWindows()
 
-            ### Drawing ##
-            img_draw = copy.deepcopy(img)
-            cv2.drawContours(img_draw, [cnts[i]], -1, dp.GREEN, 3)
-            cv2.imshow("Contours", img_draw); cv2.waitKey(0); cv2.destroyAllWindows()
+            # Circles have similar radii due to area and perimeter.    
+            # Chip contours should have no parents.
+            if ((norm_diff < MAX_NORM_DIFF) and ((hier_sort[i][3] == -1))
+                and (area > MIN_CHIP_AREA) and (area < MAX_CHIP_AREA)):
+                
+                chip_cnts.append(cnts_sort[i])
 
     # If there are no contours, do nothing
     except:
@@ -74,7 +84,15 @@ def findChips(img):
 
     return chip_cnts
 
-def main():
+def drawChips(image, all_chips):
+
+    cv2.drawContours(image, all_chips, -1, dp.CYAN, 3)
+
+    return image
+
+### Test Functions
+
+def videoTest():
     """ Run the chip detector module by itself """
     
     cap = cv2.VideoCapture(1)
@@ -100,15 +118,18 @@ def main():
     cap.release()
     cv2.destroyAllWindows()
 
-
-def test():
+def imageTest():
 
     # Get next image of playing area
-    img = cv2.imread(os.path.join('game_images', 'chips1.png'))
+    img = cv2.imread(os.path.join('game_images', 'both2.png'))
+    img_disp = copy.deepcopy(img)
 
-    # Find all of the chips
-    chip_cnts = findChips(img)
+    # Find all of the chips and draw them on the temp image
+    all_chips = detectChips(img)
+    img_disp = drawChips(img_disp, all_chips)
+
+    cv2.imshow("Detected Chips", img_disp); cv2.waitKey(0); cv2.destroyAllWindows()
 
 ### Chip Module Test Code ###
 if __name__ == "__main__":
-    test()
+    imageTest()

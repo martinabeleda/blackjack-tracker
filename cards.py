@@ -131,7 +131,45 @@ class card:
         if self.rank_score < MAX_MATCH_SCORE:
             self.best_rank_match = all_ranks[ind].name
 
-### Functions ###
+### Public Functions ###
+
+def detectCards(image, rank_path):
+    """ Returns a list of card objects containing the cards within a given image """
+    
+    # Load the card rank images into a list of rank objects
+    ranks = loadRanks(rank_path)
+
+    # Get a list of all of the contours around cards
+    all_cards = findCards(image)
+
+    for i in range(len(all_cards)):
+
+        # Produce a top-down image of each card
+        all_cards[i].processCard(image)
+
+        # Find the best rank match for this card
+        all_cards[i].matchRank(ranks, TEMPLATE_MATCHING)
+
+    return all_cards
+
+def drawCards(image, all_cards):
+    """ Draw cards from card objects onto playing area image """
+
+    for i in range(len(all_cards)):
+
+        # Draw on the temporary image
+        if all_cards[i].best_rank_match == "Unknown":
+            cnt_col = dp.RED
+        else:
+            cnt_col = dp.GREEN
+        
+        cv2.drawContours(image, [all_cards[i].contour], 0, cnt_col, 2)
+        text_pos = (all_cards[i].center[0]-20, all_cards[i].center[1])
+        cv2.putText(image, all_cards[i].best_rank_match, text_pos, cv2.FONT_HERSHEY_SIMPLEX, 0.7, dp.MAGENTA, 2, cv2.LINE_AA)
+
+    return image
+
+### Private Functions ###
 
 def findCards(image):
     """ This function takes an images and returns a list of card objects with contour and corner info """
@@ -182,7 +220,7 @@ def findCards(image):
             # Cards are determined to have an area within a given range,
             # have 4 corners and have no parents
             if ((size < CARD_MAX_AREA) and (size > CARD_MIN_AREA) 
-                and (len(approx) == 4) and (hier_sort[i][3] == -1)):                
+                and (len(approx) == 4)):# and (hier_sort[i][3] == -1)):                
                 new_card = card()
                 new_card.contour = cnts_sort[i]  
                 new_card.corner_pts = np.float32(approx)
@@ -203,7 +241,7 @@ def findCards(image):
 
     return card_info
 
-def load_ranks(path):
+def loadRanks(path):
     """ Load rank images from a specified path. Store rank images in a list of rank objects """
 
     ranks = []
@@ -298,8 +336,9 @@ def flattener(image, pts, w, h):
 
     return resized
 
+### Test Functions ###
 
-def main():
+def videoTest():
     """ Run the card detector module by itself """
     
     cap = cv2.VideoCapture(1)
@@ -308,7 +347,7 @@ def main():
 
     # Load the card rank images into a list of rank objects
     rank_path = "card_images"
-    ranks = load_ranks(rank_path)
+    ranks = loadRanks(rank_path)
 
     while(True):
 
@@ -319,25 +358,10 @@ def main():
         all_cards = findCards(img)
         img_disp = copy.deepcopy(img)
 
-        for i in range(len(all_cards)):
+        # Get a list of card objects in the image and draw on temp image
+        all_cards = detectCards(img, rank_path)
+        img_disp = drawCards(img_disp, all_cards)
 
-            # Produce a top-down image of each card
-            all_cards[i].processCard(img)
-
-            # Find the best rank match for this card
-            all_cards[i].matchRank(ranks, TEMPLATE_MATCHING)
-
-            # Draw on the temporary image
-            if all_cards[i].best_rank_match == "Unknown":
-                cnt_col = dp.RED
-            else:
-                cnt_col = dp.GREEN
-            
-            cv2.drawContours(img_disp, [all_cards[i].contour], 0, cnt_col, 2)
-            text_pos = (all_cards[i].center[0]-20, all_cards[i].center[1])
-            cv2.putText(img_disp, all_cards[i].best_rank_match, text_pos, cv2.FONT_HERSHEY_SIMPLEX, 0.7, dp.MAGENTA, 2, cv2.LINE_AA)
-
-        
         # Show the display image
         cv2.imshow("Detected Cards", img_disp)
         
@@ -348,43 +372,23 @@ def main():
     cap.release()
     cv2.destroyAllWindows()
 
-def test():
-    """ Test tthe cards module on a single flattened image """
+def imageTest():
+    """ Test the cards module on a single flattened image """
 
     rank_path = "card_images"
     font = cv2.FONT_HERSHEY_SIMPLEX
 
-    # Load the card rank images into a list of rank objects
-    ranks = load_ranks(rank_path)
-
     # Get next image of playing area
-    img = cv2.imread(os.path.join('game_images', 'transformed_small1.png'))
+    img = cv2.imread(os.path.join('game_images', 'both2.png'))
     img_disp = copy.deepcopy(img)
 
-    # Get a list of all of the contours around cards
-    all_cards = findCards(img)
-
-    for i in range(len(all_cards)):
-
-        # Produce a top-down image of each card
-        all_cards[i].processCard(img)
-
-        # Find the best rank match for this card
-        all_cards[i].matchRank(ranks, cards.TEMPLATE_MATCHING)
-
-        # Draw on the temporary image
-        if all_cards[i].best_rank_match == "Unknown":
-            cnt_col = dp.RED
-        else:
-            cnt_col = dp.GREEN
-        
-        cv2.drawContours(img_disp, [all_cards[i].contour], 0, cnt_col, 2)
-        text_pos = (all_cards[i].center[0]-20, all_cards[i].center[1])
-        cv2.putText(img_disp, all_cards[i].best_rank_match, text_pos, cv2.FONT_HERSHEY_SIMPLEX, 0.7, dp.MAGENTA, 2, cv2.LINE_AA)
+    # Get a list of card objects in the image and draw on temp image
+    all_cards = detectCards(img, rank_path)
+    img_disp = drawCards(img_disp, all_cards)
 
     # Show the display image
     cv2.imshow("Detected Cards", img_disp); cv2.waitKey(0); cv2.destroyAllWindows()
 
 ### Cards Module Test Code ###
 if __name__ == "__main__":
-    test()
+    imageTest()
