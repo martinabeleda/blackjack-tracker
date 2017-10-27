@@ -14,13 +14,23 @@ MAX_NORM_DIFF = 0.17
 MIN_CHIP_AREA = 1000
 MAX_CHIP_AREA = 8000
 
+### Structures ###
+class chip:
+    """Structure to store information about chips in the camera image."""
+
+    def __init__(self):
+        self.contour = [] # Contour of chip
+        self.center = [] # Center point of chip
+        self.radius = [] # Radius of the chip
+        self.norm_diff = [] # Normalised difference between area and perimeter calculated radii
+
 ### Public Functions ###
 
 def detectChips(image):
     """ Returns contours of the chips in an image """
 
-    # List to store all valid chips
-    chip_cnts = []
+    # List to store all valid chip objects
+    all_chips = []
 
     # Pre-processing
     gray = cv2.cvtColor(image, cv2.COLOR_BGR2GRAY)	
@@ -75,19 +85,31 @@ def detectChips(image):
             # Chip contours should have no parents.
             if ((norm_diff < MAX_NORM_DIFF) and ((hier_sort[i][3] == -1))
                 and (area > MIN_CHIP_AREA) and (area < MAX_CHIP_AREA)):
-                
-                chip_cnts.append(cnts_sort[i])
+
+                new_chip = chip()
+
+                new_chip.contour = cnts_sort[i]
+                new_chip.norm_diff = norm_diff
+
+                (x,y),radius = cv2.minEnclosingCircle(cnts_sort[i])
+                new_chip.center = (int(x),int(y))
+                new_chip.radius = int(radius)
+
+                all_chips.append(new_chip)
 
     # If there are no contours, do nothing
     except:
         pass
 
-    return chip_cnts
+    return all_chips
 
 def drawChips(image, all_chips):
 
-    cv2.drawContours(image, all_chips, -1, dp.CYAN, 3)
-
+    for i in range(len(all_chips)):
+        
+        #cv2.drawContours(image, [all_chips[i].contour], 0, dp.CYAN, 2)
+        cv2.circle(image, all_chips[i].center, all_chips[i].radius, dp.CYAN, 2)
+        
     return image
 
 ### Test Functions
