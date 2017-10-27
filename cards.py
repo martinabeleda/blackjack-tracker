@@ -126,7 +126,7 @@ class card:
 def main():
     """ Run the card detector module by itself """
     
-    cap = cv2.VideoCapture(0)
+    cap = cv2.VideoCapture(1)
     cap.set(cv2.CAP_PROP_FRAME_WIDTH,9999)
     cap.set(cv2.CAP_PROP_FRAME_HEIGHT,9999)
 
@@ -154,11 +154,11 @@ def main():
             # Draw on the temporary image
             cv2.drawContours(img_disp, [all_cards[i].contour], 0, (0,255,0), 2)
             text_pos = (all_cards[i].center[0], all_cards[i].center[1])
-            cv2.putText(img_disp, all_cards[i].best_rank_match, text_pos, font, 0.5, (255,0,0), 1, cv2.LINE_AA)
+            cv2.putText(img_disp, all_cards[i].best_rank_match, text_pos, cv2.FONT_HERSHEY_SIMPLEX, 0.5, (255,0,0), 1, cv2.LINE_AA)
         
         # Show the display image
         cv2.imshow("Detected Cards", img_disp)
-
+        
         if cv2.waitKey(1) & 0xFF == ord('q'):
             break
 

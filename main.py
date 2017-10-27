@@ -16,7 +16,7 @@ font = cv2.FONT_HERSHEY_SIMPLEX
 ranks = cards.load_ranks(rank_path)
 
 # Get next image of playing area
-img = cv2.imread(os.path.join('game_images', 'transformed_small1.png'))
+img = cv2.imread(os.path.join('game_images', 'transformed_small2.png'))
 img_disp = copy.deepcopy(img)
 
 # Get a list of all of the contours around cards
