@@ -6,13 +6,8 @@ import os
 import copy
 import math
 import numpy as np
+import display as dp
 from matplotlib import pyplot as plt
-
-# Drawing
-RED = (0,0,255)
-GREEN = (0,255,0)
-BLUE = (255,0,0)
-CYAN = (255,255,0)
 
 def findChips(img):
     """ Returns contours of the chips in an image """
@@ -70,7 +65,7 @@ def findChips(img):
 
             ### Drawing ##
             img_draw = copy.deepcopy(img)
-            cv2.drawContours(img_draw, [cnts[i]], -1, GREEN, 3)
+            cv2.drawContours(img_draw, [cnts[i]], -1, dp.GREEN, 3)
             cv2.imshow("Contours", img_draw); cv2.waitKey(0); cv2.destroyAllWindows()
 
     # If there are no contours, do nothing

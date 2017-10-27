@@ -6,6 +6,7 @@ import os
 import copy
 import imutils
 import numpy as np
+import display as dp
 from matplotlib import pyplot as plt
 
 ### Constants ###
@@ -31,13 +32,6 @@ HU_MOMENTS = 0
 TEMPLATE_MATCHING = 1
 
 MAX_MATCH_SCORE = 2000
-
-# Drawing
-RED = (0,0,255)
-GREEN = (0,255,0)
-BLUE = (255,0,0)
-CYAN = (255,255,0)
-MAGENTA = (255,0,255)
 
 ### Structures ###
 
@@ -82,7 +76,7 @@ class card:
 
         # Create a flattened image of the isolated card
         self.img = flattener(gray, pts, w, h)
-        cv2.imshow("This card flattened", self.img); cv2.waitKey(0); cv2.destroyAllWindows()
+        #cv2.imshow("This card flattened", self.img); cv2.waitKey(0); cv2.destroyAllWindows()
 
         # Crop the corner from the card
         rank_img = self.img[0:CORNER_HEIGHT, 0:CORNER_WIDTH]
@@ -112,7 +106,7 @@ class card:
             rank_crop = thresh[y1:y1+h1, x1:x1+w1]
 
             self.rank_img = cv2.resize(rank_crop, (RANK_WIDTH,RANK_HEIGHT), 0, 0)
-            cv2.imshow("Cropped Rank", self.rank_img); cv2.waitKey(0); cv2.destroyAllWindows()
+            #cv2.imshow("Cropped Rank", self.rank_img); cv2.waitKey(0); cv2.destroyAllWindows()
             #cv2.imwrite('img.png', self.rank_img)
 
     def matchRank(self, all_ranks, match_method):
@@ -138,55 +132,6 @@ class card:
             self.best_rank_match = all_ranks[ind].name
 
 ### Functions ###
-
-def main():
-    """ Run the card detector module by itself """
-    
-    cap = cv2.VideoCapture(1)
-    cap.set(cv2.CAP_PROP_FRAME_WIDTH,9999)
-    cap.set(cv2.CAP_PROP_FRAME_HEIGHT,9999)
-
-    # Load the card rank images into a list of rank objects
-    rank_path = "card_images"
-    ranks = load_ranks(rank_path)
-
-    while(True):
-
-        # Get the next frame    
-        flag, img = cap.read()
-        
-        # Get a list of all of the contours around cards
-        all_cards = findCards(img)
-        img_disp = copy.deepcopy(img)
-
-        for i in range(len(all_cards)):
-
-            # Produce a top-down image of each card
-            all_cards[i].processCard(img)
-
-            # Find the best rank match for this card
-            all_cards[i].matchRank(ranks, TEMPLATE_MATCHING)
-
-            # Draw on the temporary image
-            if all_cards[i].best_rank_match == "Unknown":
-                cnt_col = RED
-            else:
-                cnt_col = GREEN
-            
-            cv2.drawContours(img_disp, [all_cards[i].contour], 0, cnt_col, 2)
-            text_pos = (all_cards[i].center[0], all_cards[i].center[1])
-            cv2.putText(img_disp, all_cards[i].best_rank_match, text_pos, cv2.FONT_HERSHEY_SIMPLEX, 0.5, CYAN, 1, cv2.LINE_AA)
-        
-        # Show the display image
-        cv2.imshow("Detected Cards", img_disp)
-        
-        if cv2.waitKey(1) & 0xFF == ord('q'):
-            break
-
-    # When everything done, release the capture
-    cap.release()
-    cv2.destroyAllWindows()
-
 
 def findCards(image):
     """ This function takes an images and returns a list of card objects with contour and corner info """
@@ -237,7 +182,7 @@ def findCards(image):
             # Cards are determined to have an area within a given range,
             # have 4 corners and have no parents
             if ((size < CARD_MAX_AREA) and (size > CARD_MIN_AREA) 
-                and (len(approx) == 4)):# and (hier_sort[i][3] == -1)):                
+                and (len(approx) == 4) and (hier_sort[i][3] == -1)):                
                 new_card = card()
                 new_card.contour = cnts_sort[i]  
                 new_card.corner_pts = np.float32(approx)
@@ -246,12 +191,11 @@ def findCards(image):
                 card_info.append(new_card)
 
                 ### Debugging ###
-                """
-                print('size = {}, acc = {}, numCorners = {}'.format(size, accuracy, len(approx)))
-                temp_img = copy.deepcopy(image)
-                cv2.drawContours(temp_img, cnts_sort, i, (0,255,0), 3)
-                cv2.imshow("This Card Contour", temp_img); cv2.waitKey(0); cv2.destroyAllWindows()
-                """
+                #print('size = {}, acc = {}, numCorners = {}'.format(size, accuracy, len(approx)))
+                #temp_img = copy.deepcopy(image)
+                #cv2.drawContours(temp_img, cnts_sort, i, (0,255,0), 3)
+                #cv2.imshow("This Card Contour", temp_img); cv2.waitKey(0); cv2.destroyAllWindows()
+                
 
     # If there are no contours, do nothing
     except:
@@ -284,11 +228,9 @@ def load_ranks(path):
         new_rank.contour = cnts[0]
 
         ### Debugging ###
-        """
-        rank_col = cv2.cvtColor(new_rank.img, cv2.COLOR_GRAY2BGR)	
-        cv2.drawContours(rank_col, cnts, 0, (0,255,0), 3)
-        cv2.imshow("Largest Rank Contour", rank_col); cv2.waitKey(0); cv2.destroyAllWindows()
-        """
+        #rank_col = cv2.cvtColor(new_rank.img, cv2.COLOR_GRAY2BGR)	
+        #cv2.drawContours(rank_col, cnts, 0, (0,255,0), 3)
+        #cv2.imshow("Largest Rank Contour", rank_col); cv2.waitKey(0); cv2.destroyAllWindows()
 
         # Add to the list
         ranks.append(new_rank)
@@ -356,6 +298,93 @@ def flattener(image, pts, w, h):
 
     return resized
 
+
+def main():
+    """ Run the card detector module by itself """
+    
+    cap = cv2.VideoCapture(1)
+    cap.set(cv2.CAP_PROP_FRAME_WIDTH,9999)
+    cap.set(cv2.CAP_PROP_FRAME_HEIGHT,9999)
+
+    # Load the card rank images into a list of rank objects
+    rank_path = "card_images"
+    ranks = load_ranks(rank_path)
+
+    while(True):
+
+        # Get the next frame    
+        flag, img = cap.read()
+        
+        # Get a list of all of the contours around cards
+        all_cards = findCards(img)
+        img_disp = copy.deepcopy(img)
+
+        for i in range(len(all_cards)):
+
+            # Produce a top-down image of each card
+            all_cards[i].processCard(img)
+
+            # Find the best rank match for this card
+            all_cards[i].matchRank(ranks, TEMPLATE_MATCHING)
+
+            # Draw on the temporary image
+            if all_cards[i].best_rank_match == "Unknown":
+                cnt_col = dp.RED
+            else:
+                cnt_col = dp.GREEN
+            
+            cv2.drawContours(img_disp, [all_cards[i].contour], 0, cnt_col, 2)
+            text_pos = (all_cards[i].center[0]-20, all_cards[i].center[1])
+            cv2.putText(img_disp, all_cards[i].best_rank_match, text_pos, cv2.FONT_HERSHEY_SIMPLEX, 0.7, dp.MAGENTA, 2, cv2.LINE_AA)
+
+        
+        # Show the display image
+        cv2.imshow("Detected Cards", img_disp)
+        
+        if cv2.waitKey(1) & 0xFF == ord('q'):
+            break
+
+    # When everything done, release the capture
+    cap.release()
+    cv2.destroyAllWindows()
+
+def test():
+    """ Test tthe cards module on a single flattened image """
+
+    rank_path = "card_images"
+    font = cv2.FONT_HERSHEY_SIMPLEX
+
+    # Load the card rank images into a list of rank objects
+    ranks = load_ranks(rank_path)
+
+    # Get next image of playing area
+    img = cv2.imread(os.path.join('game_images', 'transformed_small1.png'))
+    img_disp = copy.deepcopy(img)
+
+    # Get a list of all of the contours around cards
+    all_cards = findCards(img)
+
+    for i in range(len(all_cards)):
+
+        # Produce a top-down image of each card
+        all_cards[i].processCard(img)
+
+        # Find the best rank match for this card
+        all_cards[i].matchRank(ranks, cards.TEMPLATE_MATCHING)
+
+        # Draw on the temporary image
+        if all_cards[i].best_rank_match == "Unknown":
+            cnt_col = dp.RED
+        else:
+            cnt_col = dp.GREEN
+        
+        cv2.drawContours(img_disp, [all_cards[i].contour], 0, cnt_col, 2)
+        text_pos = (all_cards[i].center[0]-20, all_cards[i].center[1])
+        cv2.putText(img_disp, all_cards[i].best_rank_match, text_pos, cv2.FONT_HERSHEY_SIMPLEX, 0.7, dp.MAGENTA, 2, cv2.LINE_AA)
+
+    # Show the display image
+    cv2.imshow("Detected Cards", img_disp); cv2.waitKey(0); cv2.destroyAllWindows()
+
 ### Cards Module Test Code ###
 if __name__ == "__main__":
-    main()
+    test()
