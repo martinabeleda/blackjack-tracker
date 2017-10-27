@@ -30,13 +30,14 @@ POLY_ACC_CONST = 0.02
 HU_MOMENTS = 0
 TEMPLATE_MATCHING = 1
 
-MAX_MATCH_SCORE = 1500
+MAX_MATCH_SCORE = 2000
 
 # Drawing
 RED = (0,0,255)
 GREEN = (0,255,0)
 BLUE = (255,0,0)
 CYAN = (255,255,0)
+MAGENTA = (255,0,255)
 
 ### Structures ###
 
@@ -68,15 +69,6 @@ class card:
         x, y, w, h = cv2.boundingRect(self.contour)
         self.width, self.height = w, h
         temp = copy.deepcopy(image)
-        #cv2.rectangle(temp,(x,y),(x+w,y+h),(0,255,0),2)
-        #cv2.imshow("This card bbox", temp); cv2.waitKey(0); cv2.destroyAllWindows()
-        """
-        rect = cv2.minAreaRect(self.contour)
-        box = cv2.boxPoints(rect)
-        box = np.int0(box)
-        cv2.drawContours(temp,[box],0,(0,0,255),2)
-        cv2.imshow("This card bbox", temp); cv2.waitKey(0); cv2.destroyAllWindows()
-        """
 
         # Find the centre of the card
         pts = self.corner_pts
@@ -85,23 +77,30 @@ class card:
         cent_y = int(average[0][1])
         self.center = [cent_x, cent_y]   
 
+        # Convert to grayscale
+        gray = cv2.cvtColor(image, cv2.COLOR_BGR2GRAY)	
+
         # Create a flattened image of the isolated card
-        self.img = flattener(image, pts, w, h)
+        self.img = flattener(gray, pts, w, h)
         cv2.imshow("This card flattened", self.img); cv2.waitKey(0); cv2.destroyAllWindows()
 
         # Crop the corner from the card
         rank_img = self.img[0:CORNER_HEIGHT, 0:CORNER_WIDTH]
         rank_img_padded = np.pad(rank_img, 5, 'constant', constant_values=255)
-        #cv2.imshow("This rank", rank_img_padded); cv2.waitKey(0); cv2.destroyAllWindows()
+        #cv2.imshow("This rank", rank_img); cv2.waitKey(0); cv2.destroyAllWindows()
 
         # Thresholding using Otsu's method
-        #plt.hist(rank_img.ravel(),256,[0,256]); plt.show() # Check if the image is bimodal
         (_, thresh) = cv2.threshold(rank_img_padded, 0, 255, cv2.THRESH_BINARY+cv2.THRESH_OTSU)
         thresh = cv2.bitwise_not(thresh)
-        #cv2.imshow("This card thresh", thresh); cv2.waitKey(0); cv2.destroyAllWindows()
+        #cv2.imshow("This rank thresh", thresh); cv2.waitKey(0); cv2.destroyAllWindows()
+
+        # Opening
+        kernel = np.ones((2,2),np.uint8)
+        opening = cv2.morphologyEx(thresh, cv2.MORPH_OPEN, kernel)
+        #cv2.imshow("This rank opened", opening); cv2.waitKey(0); cv2.destroyAllWindows()
 
         # Find the largest contour
-        temp_thresh = copy.deepcopy(thresh)
+        temp_thresh = copy.deepcopy(opening)
         (_, this_rank_cnts, _) = cv2.findContours(temp_thresh, cv2.RETR_TREE, cv2.CHAIN_APPROX_SIMPLE)
         this_rank_cnts = sorted(this_rank_cnts, key=cv2.contourArea,reverse=True)
 
@@ -113,7 +112,7 @@ class card:
             rank_crop = thresh[y1:y1+h1, x1:x1+w1]
 
             self.rank_img = cv2.resize(rank_crop, (RANK_WIDTH,RANK_HEIGHT), 0, 0)
-            #cv2.imshow("Cropped Rank", self.rank_img); cv2.waitKey(0); cv2.destroyAllWindows()
+            cv2.imshow("Cropped Rank", self.rank_img); cv2.waitKey(0); cv2.destroyAllWindows()
             #cv2.imwrite('img.png', self.rank_img)
 
     def matchRank(self, all_ranks, match_method):
