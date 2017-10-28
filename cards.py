@@ -33,6 +33,7 @@ TEMPLATE_MATCHING = 1
 
 MAX_MATCH_SCORE = 2500
 
+ALVIN_LOVES_DEBUG = 0
 ### Structures ###
 
 class rank:
@@ -76,20 +77,23 @@ class card:
 
         # Create a flattened image of the isolated card
         self.img = flattener(gray, pts, w, h)
-        #cv2.imshow("This card flattened", self.img); cv2.waitKey(0);
-        # cv2.destroyAllWindows()
+        if ALVIN_LOVES_DEBUG:
+            cv2.imshow("This card flattened", self.img); cv2.waitKey(0);
+            cv2.destroyAllWindows()
 
         # Crop the corner from the card
         rank_img = self.img[0:CORNER_HEIGHT, 0:CORNER_WIDTH]
         rank_img_padded = np.pad(rank_img, 5, 'constant', constant_values=255)
-        #cv2.imshow("This rank", rank_img); cv2.waitKey(0);
-        # cv2.destroyAllWindows()
+        if ALVIN_LOVES_DEBUG:
+            cv2.imshow("This rank", rank_img); cv2.waitKey(0);
+            cv2.destroyAllWindows()
 
         # Thresholding using Otsu's method
         (_, thresh) = cv2.threshold(rank_img_padded, 0, 255, cv2.THRESH_BINARY+cv2.THRESH_OTSU)
         thresh = cv2.bitwise_not(thresh)
-        #cv2.imshow("This rank thresh", thresh); cv2.waitKey(0);
-        # cv2.destroyAllWindows()
+        if ALVIN_LOVES_DEBUG:
+            cv2.imshow("This rank thresh", thresh); cv2.waitKey(0);
+            cv2.destroyAllWindows()
 
         # Opening
         #kernel = np.ones((2,2),np.uint8)
@@ -109,8 +113,9 @@ class card:
             rank_crop = thresh[y1:y1+h1, x1:x1+w1]
 
             self.rank_img = cv2.resize(rank_crop, (RANK_WIDTH,RANK_HEIGHT), 0, 0)
-            #cv2.imshow("Cropped Rank", self.rank_img); cv2.waitKey(0);
-            # cv2.destroyAllWindows()
+            if ALVIN_LOVES_DEBUG:
+                cv2.imshow("Cropped Rank", self.rank_img); cv2.waitKey(0);
+                cv2.destroyAllWindows()
             #cv2.imwrite('img.png', self.rank_img)
 
     def matchRank(self, all_ranks, match_method):
@@ -283,7 +288,7 @@ def loadRanks(path):
 def flattener(image, pts, w, h):
     """ Flattens an image of a card into a top-down 200x300 perspective.
     Returns the flattened, re-sized, grayed image."""
-    
+
     # rect to contain an array [top left, top right, bottom right, bottom left]
     rect = np.zeros((4,2), dtype = "float32")    
     s = np.sum(pts, axis = 2)
@@ -291,6 +296,8 @@ def flattener(image, pts, w, h):
     rect[0] = pts[np.argmin(s)]
     rect[2] = pts[np.argmax(s)]
 
+    temp = None
+    new_pts = None
     for i in range(pts.shape[0]):
         if np.array_equal(pts[i], [rect[0]]):
             temp = np.delete(pts, i, 0)
@@ -303,9 +310,13 @@ def flattener(image, pts, w, h):
 
     # compute the difference between the points -- the top-right will have the minimum difference
     # and the bottom-left will have the maximum difference
-    diff = np.diff(new_pts, axis=2)
-    rect[1] = new_pts[np.argmin(diff)]
-    rect[3] = new_pts[np.argmax(diff)]
+    y_pts = new_pts[:,:,1]
+    if y_pts[0] > y_pts[1]:
+        rect[3] = new_pts[0]
+        rect[1] = new_pts[1]
+    else:
+        rect[3] = new_pts[1]
+        rect[1] = new_pts[0]
 
     # Extract the top left, top right, bottom right and bottom left
     (tl, tr, br, bl) = rect
