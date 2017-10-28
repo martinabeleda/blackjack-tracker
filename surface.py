@@ -3,7 +3,13 @@ import numpy as np
 import cv2
 import imutils
 from copy import deepcopy
+from datetime import datetime
 
+
+# Set the cutoff limit for detected surfaces
+# e.g. 0.5 means a surface is only valid if it occupies at
+# least half of the entire image space from the original image
+cutoff = 0.5
 
 class PlayingSurface:
     " Structure to store information about the playing surface. "
@@ -22,12 +28,6 @@ def detect(image):
     # The image will be set to this height for faster processing
     image_resize_value = 300.0
 
-    # Create a new instance of the playing surface class
-    playing_surface = PlayingSurface()
-
-    # Give it a name
-    playing_surface.name = 'primary'
-
     # Work out how much bigger than 'x' the image is wrt height
     ratio = image.shape[0] / image_resize_value
 
@@ -44,6 +44,13 @@ def detect(image):
 
     # Find contours in the edged image and only keep the largest five (ordered largest to smallest)
     _, contours, _ = cv2.findContours(im_edge.copy(), cv2.RETR_TREE, cv2.CHAIN_APPROX_SIMPLE)
+
+    # Exit immediately if no contours found
+    try:
+        num_contours = contours[0]
+    except:
+        return None
+
     contours = sorted(contours, key=cv2.contourArea, reverse=True)[:5]
 
     # Initialise an index to represent the location of the playing surface in the contours list
@@ -51,6 +58,8 @@ def detect(image):
 
     # Initialise the polymetric approximation accuracy scaling factor
     POLY_ACC_CONST = 0.02
+
+    surface_cnt = None
 
     for c in contours:
 
@@ -63,10 +72,7 @@ def detect(image):
         if len(curr_cnt) == 4:
             # Draw the contour over the image (to be displayed later)
             cv2.drawContours(image, contours, contourIdx=contour_idx, color=(255, 180, 0), thickness=2)
-            # Store the contour of the playing surface
-            playing_surface.contour = curr_cnt
-            # Store the contour drawn over the image
-            playing_surface.img_cnt = image
+            surface_cnt = curr_cnt
             break
 
         # Increment the index
@@ -76,7 +82,7 @@ def detect(image):
     # bottom-left points so that we can later warp the image -- we'll start by reshaping our contour
     # to be our finals and initializing our output rectangle in top-left, top-right, bottom-right,
     # and bottom-left order
-    rect_points = playing_surface.contour.reshape(4, 2)
+    rect_points = surface_cnt.reshape(4, 2)
 
     # The top-left point has the smallest sum whereas the bottom-right has the largest sum
     s = np.sum(rect_points, axis=1)
@@ -144,37 +150,108 @@ def detect(image):
     persp_mtx = cv2.getPerspectiveTransform(rect, dst)
     transformed = cv2.warpPerspective(original_image, persp_mtx, (width, height))
 
-    # Store the transformed playing surface
-    playing_surface.transform = transformed
-
-    # Store the area of the surface (pixels^2)
-    playing_surface.area = transformed.shape[0] * transformed.shape[1]
+    # Get the area of the surface (pixels^2)
+    transformed_area = transformed.shape[0] * transformed.shape[1]
 
     # Get the area of the original image for a comparison (pixels^2)
     original_image_area = original_image.shape[0] * original_image.shape[1]
 
-    # Compute and store the size of the playing surface wrt the entire image
-    playing_surface.area_relative = np.divide(playing_surface.area, original_image_area)
+    # Compute the relative size of the surface wrt the entire image
+    relative_size = np.divide(transformed_area, original_image_area)
 
-    # Return the complete playing surface object
-    return playing_surface
+    if relative_size < cutoff:
+        return None
+    else:
 
-def display(original, contoured, transformed):
+        # Create a new instance of the playing surface class
+        playing_surface = PlayingSurface()
+        # Give it a name
+        playing_surface.name = 'primary'
+        # Store the contour of the playing surface
+        playing_surface.contour = surface_cnt
+        # Store the contour drawn over the image
+        playing_surface.img_cnt = image
+        # Store the transformed playing surface
+        playing_surface.transform = transformed
+        # Store the area of the surface (pixels^2)
+        playing_surface.area = transformed_area
+        # Store the relative size of the playing surface wrt the entire image
+        playing_surface.area_relative = relative_size
 
+        # Return the complete playing surface object
+        return playing_surface
+
+
+def display(countdown, contoured, transformed=np.array([])):
     # Arbitrary x, y offsets for displays
     x_offset = 50
     y_offset = 50
 
-    # Original image from source
-    cv2.imshow("Original", original)
+    # Original image from source with countdown timer
+    cv2.imshow("Original", countdown)
     cv2.moveWindow("Original", x_offset, y_offset)
 
     # Original image with the contour of the playing surface overlayed
     cv2.imshow("Contoured", contoured)
-    cv2.moveWindow("Contoured", original.shape[1] + x_offset, y_offset)
+    cv2.moveWindow("Contoured", countdown.shape[1] + x_offset, y_offset)
 
-    # Transformed playing surface
-    cv2.imshow("Transformed", transformed)
-    cv2.moveWindow("Transformed", original.shape[1] * 2 + x_offset, y_offset)
+    # Only show the transformed surface if it exists (given to function implies existence)
+    if bool(transformed.any()):
+        # Transformed playing surface
+        cv2.imshow("Transformed", transformed)
+        cv2.moveWindow("Transformed", countdown.shape[1] * 2 + x_offset, y_offset)
 
     return
+
+
+def timer(image, count):
+
+    text = format(count, '02d')
+    font_pos = (380, 70)
+    # Give the font a little shadow to help it stand out
+    shadow_offset = 2
+    a = int(font_pos[0]) + shadow_offset
+    b = int(font_pos[1]) + shadow_offset
+    font_pos2 = (a, b)
+    font = cv2.FONT_HERSHEY_SIMPLEX
+    font_scale = 2
+    font_thickness = 3
+    line_type = cv2.LINE_AA
+
+    # Make the font red near the end of the countdown (white otherwise)
+    if count <= 10 and count % 2 == 0:
+        colour = (0, 0, 255)
+    elif count <= 3:
+        colour = (0, 0, 255)
+    else:
+        colour = (255, 255, 255)
+
+    # Add text to the image with a small shadow
+    cv2.putText(image, text, font_pos2, font, font_scale, (0, 0, 0), font_thickness, line_type)
+    cv2.putText(image, text, font_pos, font, font_scale, colour, font_thickness, line_type)
+
+    # Return the image with the text overlayed
+    return image
+
+
+def not_found(image):
+
+    text = 'Playing surface not found!'
+    font_pos = (10, image.shape[0] - 20)
+    # Give the font a little shadow to help it stand out
+    shadow_offset = 1
+    a = int(font_pos[0]) + shadow_offset
+    b = int(font_pos[1]) + shadow_offset
+    font_pos2 = (a, b)
+    font = cv2.FONT_HERSHEY_SIMPLEX
+    font_scale = 1
+    font_thickness = 2
+    line_type = cv2.LINE_AA
+    colour = (0, 0, 255)
+
+    # Add text to the image with a small shadow
+    cv2.putText(image, text, font_pos2, font, font_scale, (0, 0, 0), font_thickness, line_type)
+    cv2.putText(image, text, font_pos, font, font_scale, colour, font_thickness, line_type)
+
+    # Return the image with the text overlayed
+    return image

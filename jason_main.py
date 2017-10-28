@@ -2,25 +2,58 @@
 import cv2
 import sys
 import imutils
+import time
 from copy import deepcopy
+from datetime import datetime
 
 # import own libraries
 import surface
 
 
-while True:
+count = 10 + 1
+curr_time = float(datetime.now().strftime('%s.%f')[9:-5])
+# initialise an empty playing surface
+valid_surface = None
 
-    # get image (replace with webcam feed)
-    image = cv2.imread('new_surf5.png')
+while count != 0:
 
-    # obtain playing surface object
+    # Initialise or reinitialise the surface each time we grab a new frame
+    playing_surface = None
+
+    # Get image (replace with webcam feed)
+    if count % 2 == 0:
+        image = cv2.imread('/Users/jasonwebb/PycharmProjects/Vision_Major/transformed3_uhoh.png')  # example of playing surface too small
+    else:
+        image = cv2.imread('/Users/jasonwebb/PycharmProjects/Vision_Major/transformed3_uhoh.png')  # example of playing surface that is good
+
+    # Try and obtain a valid playing surface object
     playing_surface = surface.detect(image)
 
-    # configure images for display and then display them
+    # Configure the raw original image
     orig_disp = deepcopy(imutils.resize(image, height=300))
-    cnt_disp = deepcopy(imutils.resize(playing_surface.img_cnt, height=300))
-    trans_disp = deepcopy(imutils.resize(playing_surface.transform, height=300))
-    surface.display(orig_disp, cnt_disp, trans_disp)
+
+    # Start with a fresh copy of the raw original image
+    timer_disp = deepcopy(orig_disp)
+    test_time = float(datetime.now().strftime('%s.%f')[9:-5])
+    if count != 0 and abs(test_time - curr_time) > 1:
+        curr_time = float(datetime.now().strftime('%s.%f')[9:-5])
+        count -= 1
+    timer_disp = surface.timer(timer_disp, count)
+
+    if playing_surface:
+        # Configure and display the contoured and transformed images if the playing surface was found
+        cnt_disp = deepcopy(imutils.resize(playing_surface.img_cnt, height=300))
+        trans_disp = deepcopy(imutils.resize(playing_surface.transform, height=300))
+        surface.display(timer_disp, cnt_disp, trans_disp)
+        valid_surface = playing_surface.transform
+    else:
+        # Add a text overlay in place of the contour image
+        not_found = surface.not_found(deepcopy(orig_disp))
+        if valid_surface:
+            surface.display(timer_disp, not_found, valid_surface)
+        else:
+            # Display the countdown timer and the raw original until a valid surface is found
+            surface.display(timer_disp, not_found)
 
     # handling closing of displays in main atm, could shift anywhere though
     key = cv2.waitKey(delay=1)
@@ -31,7 +64,8 @@ while True:
         break
 
 # save transformed surface (can comment out - was using for testing and sending to Marty)
-cv2.imwrite('Playing_Surface_Transformed.png', playing_surface.transform)
-
+if valid_surface:
+    cv2.imwrite('Last_Valid_Surface.png', valid_surface)
+cv2.destroyAllWindows()
 sys.exit(0)
 
