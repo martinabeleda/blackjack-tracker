@@ -10,8 +10,8 @@ from datetime import datetime
 import surface
 
 
-def get_surface():
-    count = 10 + 1
+def get_surface(count):
+    count += 1
     curr_time = float(datetime.now().strftime('%s.%f')[9:-5])
     # initialise an empty playing surface
     valid_surface = None
@@ -46,12 +46,12 @@ def get_surface():
             cnt_disp = deepcopy(imutils.resize(playing_surface.img_cnt, height=300))
             trans_disp = deepcopy(imutils.resize(playing_surface.transform, height=300))
             surface.display(timer_disp, cnt_disp, trans_disp)
-            valid_surface = playing_surface.transform
+            valid_surface = playing_surface
         else:
             # Add a text overlay in place of the contour image
             not_found = surface.not_found(deepcopy(orig_disp))
             if valid_surface is not None:
-                surface.display(timer_disp, not_found, imutils.resize(valid_surface, height=300))
+                surface.display(timer_disp, not_found, imutils.resize(valid_surface.transform, height=300))
             else:
                 # Display the countdown timer and the raw original until a valid surface is found
                 surface.display(timer_disp, not_found)
@@ -66,7 +66,7 @@ def get_surface():
 
     # save transformed surface (can comment out - was using for testing and sending to Marty)
     if valid_surface is not None:
-        cv2.imwrite('Last_Valid_Surface.png', valid_surface)
+        cv2.imwrite('Last_Valid_Surface.png', valid_surface.transform)
     cv2.destroyAllWindows()
 
     return valid_surface
