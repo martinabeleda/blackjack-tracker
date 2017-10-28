@@ -130,10 +130,11 @@ class card:
 
         if self.rank_score < MAX_MATCH_SCORE:
             self.best_rank_match = all_ranks[ind].name
+            print(self.best_rank_match)
 
 ### Public Functions ###
 
-def detectCards(image, rank_path):
+def detect(image, rank_path):
     """ Returns a list of card objects containing the cards within a given image """
     
     # Load the card rank images into a list of rank objects
@@ -152,7 +153,7 @@ def detectCards(image, rank_path):
 
     return all_cards
 
-def drawCards(image, all_cards):
+def display(image, all_cards):
     """ Draw cards from card objects onto playing area image """
 
     for i in range(len(all_cards)):
@@ -359,8 +360,8 @@ def videoTest():
         img_disp = copy.deepcopy(img)
 
         # Get a list of card objects in the image and draw on temp image
-        all_cards = detectCards(img, rank_path)
-        img_disp = drawCards(img_disp, all_cards)
+        all_cards = detect(img, rank_path)
+        img_disp = display(img_disp, all_cards)
 
         # Show the display image
         cv2.imshow("Detected Cards", img_disp)
@@ -383,8 +384,8 @@ def imageTest():
     img_disp = copy.deepcopy(img)
 
     # Get a list of card objects in the image and draw on temp image
-    all_cards = detectCards(img, rank_path)
-    img_disp = drawCards(img_disp, all_cards)
+    all_cards = detect(img, rank_path)
+    img_disp = display(img_disp, all_cards)
 
     # Show the display image
     cv2.imshow("Detected Cards", img_disp); cv2.waitKey(0); cv2.destroyAllWindows()

@@ -4,9 +4,12 @@
 import os
 import cv2
 import copy
-import cards as cd
-import chips as ch
 import display as dp
+
+# import own libraries
+import surface
+import cards
+import chips
 
 ### Constants
 
@@ -27,12 +30,12 @@ def videoTest():
         img_disp = copy.deepcopy(img)
 
         # Get a list of card objects in the image and draw on temp image
-        all_cards = cd.detectCards(img, rank_path)
-        img_disp = cd.drawCards(img_disp, all_cards)
+        all_cards = cards.detect(img, rank_path)
+        img_disp = cards.display(img_disp, all_cards)
 
         # Find all of the chips and draw them on the temp image
-        all_chips = ch.detectChips(img)
-        img_disp = ch.drawChips(img_disp, all_chips)
+        all_chips = chips.detect(img)
+        img_disp = chips.display(img_disp, all_chips)
 
         cv2.imshow("Detected Cards and Chips", img_disp); cv2.waitKey(0); cv2.destroyAllWindows()
             
@@ -46,16 +49,25 @@ def videoTest():
 def imageTest():
 
     # Get next image of playing area
-    img = cv2.imread(os.path.join('game_images', 'both2.png'))
-    img_disp = copy.deepcopy(img)
+    img = cv2.imread(os.path.join('game_images', 'surface4.png'))
+
+    # obtain playing surface object
+    playing_surface = surface.detect(img)
+    img_disp = copy.deepcopy(playing_surface.transform)
 
     # Get a list of card objects in the image and draw on temp image
-    all_cards = cd.detectCards(img, rank_path)
-    img_disp = cd.drawCards(img_disp, all_cards)
+    all_cards = cards.detect(playing_surface.transform, rank_path)
+    img_disp = cards.display(img_disp, all_cards)
 
     # Find all of the chips and draw them on the temp image
-    all_chips = ch.detectChips(img)
-    img_disp = ch.drawChips(img_disp, all_chips)
+    all_chips = chips.detect(img)
+    img_disp = chips.display(img_disp, all_chips)
+
+    # configure images for display and then display them
+    orig_disp = deepcopy(imutils.resize(image, height=300))
+    cnt_disp = deepcopy(imutils.resize(playing_surface.img_cnt, height=300))
+    trans_disp = deepcopy(imutils.resize(playing_surface.transform, height=300))
+    surface.display(orig_disp, cnt_disp, trans_disp)
 
     cv2.imshow("Detected Cards and Chips", img_disp); cv2.waitKey(0); cv2.destroyAllWindows()
 

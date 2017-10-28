@@ -26,7 +26,7 @@ class chip:
 
 ### Public Functions ###
 
-def detectChips(image):
+def detect(image):
     """ Returns contours of the chips in an image """
 
     # List to store all valid chip objects
@@ -103,7 +103,7 @@ def detectChips(image):
 
     return all_chips
 
-def drawChips(image, all_chips):
+def display(image, all_chips):
 
     for i in range(len(all_chips)):
         
@@ -128,8 +128,8 @@ def videoTest():
         img_disp = copy.deepcopy(img)
 
         # Find all of the chips and draw them on the temp image
-        all_chips = detectChips(img)
-        img_disp = drawChips(img_disp, all_chips)
+        all_chips = detect(img)
+        img_disp = display(img_disp, all_chips)
         
         # Show the display image
         cv2.imshow("Detected Chips", img_disp)
@@ -148,8 +148,8 @@ def imageTest():
     img_disp = copy.deepcopy(img)
 
     # Find all of the chips and draw them on the temp image
-    all_chips = detectChips(img)
-    img_disp = drawChips(img_disp, all_chips)
+    all_chips = detect(img)
+    img_disp = display(img_disp, all_chips)
 
     cv2.imshow("Detected Chips", img_disp); cv2.waitKey(0); cv2.destroyAllWindows()
 

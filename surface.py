@@ -16,11 +16,8 @@ class PlayingSurface:
         self.area = []  # Area of the playing surface
         self.area_relative = []  # Relative size of the playing surface wrt original image
 
-
-" This function finds the playing surface in the original image and stores info in an appropriate object "
-
-
 def detect(image):
+    " This function finds the playing surface in the original image and stores info in an appropriate object "
 
     # The image will be set to this height for faster processing
     image_resize_value = 300.0
