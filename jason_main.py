@@ -10,10 +10,10 @@ from datetime import datetime
 import surface
 
 
-count = 20 + 1
+count = 10 + 1
 curr_time = float(datetime.now().strftime('%s.%f')[9:-5])
 # initialise an empty playing surface
-playing_surface = None
+valid_surface = None
 
 while count != 0:
 
@@ -22,9 +22,9 @@ while count != 0:
 
     # Get image (replace with webcam feed)
     if count % 2 == 0:
-        image = cv2.imread('today4.png')  # example of playing surface too small
+        image = cv2.imread('/Users/jasonwebb/PycharmProjects/Vision_Major/transformed3_uhoh.png')  # example of playing surface too small
     else:
-        image = cv2.imread('new_surf5.png')  # example of playing surface that is good
+        image = cv2.imread('/Users/jasonwebb/PycharmProjects/Vision_Major/transformed3_uhoh.png')  # example of playing surface that is good
 
     # Try and obtain a valid playing surface object
     playing_surface = surface.detect(image)
@@ -45,8 +45,10 @@ while count != 0:
         cnt_disp = deepcopy(imutils.resize(playing_surface.img_cnt, height=300))
         trans_disp = deepcopy(imutils.resize(playing_surface.transform, height=300))
         surface.display(timer_disp, cnt_disp, trans_disp)
+        valid_surface = playing_surface.transform
     else:
-        cv2.destroyWindow("Transformed")
+        if valid_surface:
+            cv2.destroyWindow("Transformed")
         not_found = surface.not_found(deepcopy(orig_disp))
         # Display the countdown timer and the raw original until a valid surface is found
         surface.display(timer_disp, not_found)
@@ -59,9 +61,9 @@ while count != 0:
         cv2.destroyAllWindows()
         break
 
-
 # save transformed surface (can comment out - was using for testing and sending to Marty)
-cv2.imwrite('Playing_Surface_Transformed.png', playing_surface.transform)
+if valid_surface:
+    cv2.imwrite('Last_Valid_Surface.png', valid_surface)
 cv2.destroyAllWindows()
 sys.exit(0)
 
