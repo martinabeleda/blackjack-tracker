@@ -33,6 +33,21 @@ def videoTest():
         playing_surface = surface.detect(img)
         img_disp = copy.deepcopy(playing_surface.transform)
 
+        # ----------- ALVIN HAHAHA --------------------
+        # im_ycrcb = cv2.cvtColor(playing_surface.transform, cv2.COLOR_BGR2YCR_CB)
+        # im_smooth = copy.deepcopy(im_ycrcb)
+        # clahe = cv2.createCLAHE(clipLimit=2.0, tileGridSize=(8, 8))
+        # im_smooth[:, :, 0] = clahe.apply(im_smooth[:, :, 0])
+        # im_ycrcb_disp = cv2.cvtColor(im_ycrcb, cv2.COLOR_YCR_CB2BGR)
+        # im_smooth_disp = cv2.cvtColor(im_smooth, cv2.COLOR_YCR_CB2BGR)
+        #
+        # import numpy as np
+        # cv2.namedWindow("Illuminance correction", cv2.WINDOW_NORMAL)
+        # cv2.imshow("Illuminance correction",
+        #            np.hstack([im_ycrcb_disp, im_smooth_disp]))
+        # cv2.resizeWindow("Illuminance correction", 1200, 700)
+        # ------------END OF ALVIN HAHAHA -------------
+
         # Get a list of card objects in the image and draw on temp image
         all_cards = cards.detect(playing_surface.transform, rank_path)
         img_disp = cards.display(img_disp, all_cards)
@@ -79,4 +94,4 @@ def imageTest():
 
 ### Module Test Code ###
 if __name__ == "__main__":
-    imageTest()
+    videoTest()

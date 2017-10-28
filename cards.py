@@ -31,7 +31,7 @@ POLY_ACC_CONST = 0.02
 HU_MOMENTS = 0
 TEMPLATE_MATCHING = 1
 
-MAX_MATCH_SCORE = 2000
+MAX_MATCH_SCORE = 2500
 
 ### Structures ###
 
@@ -76,25 +76,28 @@ class card:
 
         # Create a flattened image of the isolated card
         self.img = flattener(gray, pts, w, h)
-        #cv2.imshow("This card flattened", self.img); cv2.waitKey(0); cv2.destroyAllWindows()
+        #cv2.imshow("This card flattened", self.img); cv2.waitKey(0);
+        # cv2.destroyAllWindows()
 
         # Crop the corner from the card
         rank_img = self.img[0:CORNER_HEIGHT, 0:CORNER_WIDTH]
         rank_img_padded = np.pad(rank_img, 5, 'constant', constant_values=255)
-        #cv2.imshow("This rank", rank_img); cv2.waitKey(0); cv2.destroyAllWindows()
+        #cv2.imshow("This rank", rank_img); cv2.waitKey(0);
+        # cv2.destroyAllWindows()
 
         # Thresholding using Otsu's method
         (_, thresh) = cv2.threshold(rank_img_padded, 0, 255, cv2.THRESH_BINARY+cv2.THRESH_OTSU)
         thresh = cv2.bitwise_not(thresh)
-        #cv2.imshow("This rank thresh", thresh); cv2.waitKey(0); cv2.destroyAllWindows()
+        #cv2.imshow("This rank thresh", thresh); cv2.waitKey(0);
+        # cv2.destroyAllWindows()
 
         # Opening
-        kernel = np.ones((2,2),np.uint8)
-        opening = cv2.morphologyEx(thresh, cv2.MORPH_OPEN, kernel)
+        #kernel = np.ones((2,2),np.uint8)
+        #opening = cv2.morphologyEx(thresh, cv2.MORPH_OPEN, kernel)
         #cv2.imshow("This rank opened", opening); cv2.waitKey(0); cv2.destroyAllWindows()
 
         # Find the largest contour
-        temp_thresh = copy.deepcopy(opening)
+        temp_thresh = copy.deepcopy(thresh)
         (_, this_rank_cnts, _) = cv2.findContours(temp_thresh, cv2.RETR_TREE, cv2.CHAIN_APPROX_SIMPLE)
         this_rank_cnts = sorted(this_rank_cnts, key=cv2.contourArea,reverse=True)
 
@@ -106,7 +109,8 @@ class card:
             rank_crop = thresh[y1:y1+h1, x1:x1+w1]
 
             self.rank_img = cv2.resize(rank_crop, (RANK_WIDTH,RANK_HEIGHT), 0, 0)
-            #cv2.imshow("Cropped Rank", self.rank_img); cv2.waitKey(0); cv2.destroyAllWindows()
+            #cv2.imshow("Cropped Rank", self.rank_img); cv2.waitKey(0);
+            # cv2.destroyAllWindows()
             #cv2.imwrite('img.png', self.rank_img)
 
     def matchRank(self, all_ranks, match_method):
@@ -380,7 +384,7 @@ def imageTest():
     font = cv2.FONT_HERSHEY_SIMPLEX
 
     # Get next image of playing area
-    img = cv2.imread(os.path.join('game_images', 'both2.png'))
+    img = cv2.imread(os.path.join('game_images', 'surface4.png'))
     img_disp = copy.deepcopy(img)
 
     # Get a list of card objects in the image and draw on temp image
