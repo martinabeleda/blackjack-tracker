@@ -130,7 +130,7 @@ class card:
 
         if self.rank_score < MAX_MATCH_SCORE:
             self.best_rank_match = all_ranks[ind].name
-            print(self.best_rank_match)
+            #print(self.best_rank_match)
 
 ### Public Functions ###
 
