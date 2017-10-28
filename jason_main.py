@@ -47,11 +47,13 @@ while count != 0:
         surface.display(timer_disp, cnt_disp, trans_disp)
         valid_surface = playing_surface.transform
     else:
-        if valid_surface:
-            cv2.destroyWindow("Transformed")
+        # Add a text overlay in place of the contour image
         not_found = surface.not_found(deepcopy(orig_disp))
-        # Display the countdown timer and the raw original until a valid surface is found
-        surface.display(timer_disp, not_found)
+        if valid_surface:
+            surface.display(timer_disp, not_found, valid_surface)
+        else:
+            # Display the countdown timer and the raw original until a valid surface is found
+            surface.display(timer_disp, not_found)
 
     # handling closing of displays in main atm, could shift anywhere though
     key = cv2.waitKey(delay=1)
