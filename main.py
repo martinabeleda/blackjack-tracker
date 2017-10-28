@@ -14,83 +14,83 @@ import chips
 
 ### Constants
 
+## import jason libraries
+import initialise
+
 rank_path = "card_images"
 font = cv2.FONT_HERSHEY_SIMPLEX
 
 def videoTest():
     """ Run the chip detector module by itself """
-    
+
+    # set up the camera and set max resolution
     cap = cv2.VideoCapture(1)
     cap.set(cv2.CAP_PROP_FRAME_WIDTH,9999)
     cap.set(cv2.CAP_PROP_FRAME_HEIGHT,9999)
 
-    while(True):
+    # Run through countdown and grab playing surface. Returns an surface
+    # object.
+    surface = initialise.get_surface(cap, 5)
 
-        # Get the next frame    
-        (flag, img) = cap.read()
+    # If initialisation found a successful transform, else exit the program
+    if surface is not None:
+        while(True):
 
-        # obtain playing surface object
-        playing_surface = surface.detect(img)
-        img_disp = copy.deepcopy(playing_surface.transform)
+            # Get the next frame
+            (flag, img) = cap.read()
 
-        # ----------- ALVIN HAHAHA --------------------
-        # im_ycrcb = cv2.cvtColor(playing_surface.transform, cv2.COLOR_BGR2YCR_CB)
-        # im_smooth = copy.deepcopy(im_ycrcb)
-        # clahe = cv2.createCLAHE(clipLimit=2.0, tileGridSize=(8, 8))
-        # im_smooth[:, :, 0] = clahe.apply(im_smooth[:, :, 0])
-        # im_ycrcb_disp = cv2.cvtColor(im_ycrcb, cv2.COLOR_YCR_CB2BGR)
-        # im_smooth_disp = cv2.cvtColor(im_smooth, cv2.COLOR_YCR_CB2BGR)
-        #
-        # import numpy as np
-        # cv2.namedWindow("Illuminance correction", cv2.WINDOW_NORMAL)
-        # cv2.imshow("Illuminance correction",
-        #            np.hstack([im_ycrcb_disp, im_smooth_disp]))
-        # cv2.resizeWindow("Illuminance correction", 1200, 700)
-        # ------------END OF ALVIN HAHAHA -------------
+            # Transform using the transformation matrix found during
+            # initialisation
+            transformed = cv2.warpPerspective(img, surface.perspective_matrix,
+                                                  (surface.width, surface.height))
 
-        # Get a list of card objects in the image and draw on temp image
-        all_cards = cards.detect(playing_surface.transform, rank_path)
-        img_disp = cards.display(img_disp, all_cards)
+            img_disp = copy.deepcopy(transformed)
 
-        # Find all of the chips and draw them on the temp image
-        all_chips = chips.detect(playing_surface.transform)
-        img_disp = chips.display(img_disp, all_chips)
+            # Get a list of card objects in the image and draw on temp image
+            all_cards = cards.detect(transformed, rank_path)
+            img_disp = cards.display(img_disp, all_cards)
 
-        # configure images for display and then display them
-        cnt_disp = copy.deepcopy(imutils.resize(playing_surface.img_cnt, height=300))
+            # Find all of the chips and draw them on the temp image
+            all_chips = chips.detect(transformed)
+            img_disp = chips.display(img_disp, all_chips)
 
-        cv2.imshow("Playing surface contour", cnt_disp)
-        cv2.imshow("Detected Cards and Chips", img_disp)
-            
-        if cv2.waitKey(1) & 0xFF == ord('q'):
-            break
+            # configure images for display and then display them
+            cnt_disp = copy.deepcopy(imutils.resize(surface.img_cnt,
+                                                    height=400))
 
+            cv2.imshow("Playing surface contour", cnt_disp)
+            cv2.imshow("Detected Cards and Chips", img_disp)
+
+            if cv2.waitKey(1) & 0xFF == ord('q'):
+                break
+    else:
+        print('Initialisation failed. No successful transform found')
     # When everything done, release the capture
     cap.release()
     cv2.destroyAllWindows()
 
-def imageTest():
-
-    # Get next image of playing area
-    img = cv2.imread(os.path.join('game_images', 'surface2.png'))
-
-    # obtain playing surface object
-    playing_surface = surface.detect(img)
-    img_disp = copy.deepcopy(playing_surface.transform)
-
-    # Get a list of card objects in the image and draw on temp image
-    all_cards = cards.detect(playing_surface.transform, rank_path)
-    img_disp = cards.display(img_disp, all_cards)
-
-    # Find all of the chips and draw them on the temp image
-    all_chips = chips.detect(playing_surface.transform)
-    img_disp = chips.display(img_disp, all_chips)
-
-    # configure images for display and then display them
-    cnt_disp = copy.deepcopy(imutils.resize(playing_surface.img_cnt, height=300))
-
-    cv2.imshow("Playing surface contour", cnt_disp)
-    cv2.imshow("Detected Cards and Chips", img_disp); cv2.waitKey(0); cv2.destroyAllWindows()
+# def imageTest():
+#
+#     # Get next image of playing area
+#     img = cv2.imread(os.path.join('game_images', 'surface2.png'))
+#
+#     # obtain playing surface object
+#     playing_surface = surface.detect(img)
+#     img_disp = copy.deepcopy(transformed)
+#
+#     # Get a list of card objects in the image and draw on temp image
+#     all_cards = cards.detect(transformed, rank_path)
+#     img_disp = cards.display(img_disp, all_cards)
+#
+#     # Find all of the chips and draw them on the temp image
+#     all_chips = chips.detect(transformed)
+#     img_disp = chips.display(img_disp, all_chips)
+#
+#     # configure images for display and then display them
+#     cnt_disp = copy.deepcopy(imutils.resize(playing_surface.img_cnt, height=300))
+#
+#     cv2.imshow("Playing surface contour", cnt_disp)
+#     cv2.imshow("Detected Cards and Chips", img_disp); cv2.waitKey(0); cv2.destroyAllWindows()
 
 ### Module Test Code ###
 if __name__ == "__main__":

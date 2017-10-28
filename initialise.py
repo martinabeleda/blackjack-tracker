@@ -10,7 +10,7 @@ from datetime import datetime
 import surface
 
 
-def get_surface(count):
+def get_surface(cap, count):
     count += 1
     curr_time = float(datetime.now().strftime('%s.%f')[9:-5])
     # initialise an empty playing surface
@@ -21,11 +21,8 @@ def get_surface(count):
         # Initialise or reinitialise the surface each time we grab a new frame
         playing_surface = None
 
-        # Get image (replace with webcam feed)
-        if count % 2 == 0:
-            image = cv2.imread('new_surf5.png')  # example of playing surface too small
-        else:
-            image = cv2.imread('transformed3_uhoh.png')  # example of playing surface that is good
+        # take camera image
+        (flag_, image) = cap.read()
 
         # Try and obtain a valid playing surface object
         playing_surface = surface.detect(image)
@@ -64,9 +61,6 @@ def get_surface(count):
             cv2.destroyAllWindows()
             break
 
-    # save transformed surface (can comment out - was using for testing and sending to Marty)
-    if valid_surface is not None:
-        cv2.imwrite('Last_Valid_Surface.png', valid_surface.transform)
     cv2.destroyAllWindows()
 
     return valid_surface
