@@ -46,6 +46,13 @@ def detect(image):
 
     # Find contours in the edged image and only keep the largest five (ordered largest to smallest)
     _, contours, _ = cv2.findContours(im_edge.copy(), cv2.RETR_TREE, cv2.CHAIN_APPROX_SIMPLE)
+
+    # Exit immediately if no contours found
+    try:
+        num_contours = contours[0]
+    except:
+        return None
+
     contours = sorted(contours, key=cv2.contourArea, reverse=True)[:5]
 
     # Initialise an index to represent the location of the playing surface in the contours list
