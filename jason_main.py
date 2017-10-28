@@ -15,11 +15,19 @@ curr_time = float(datetime.now().strftime('%s.%f')[9:-5])
 # initialise an empty playing surface
 playing_surface = None
 
-while True:
+while count != 0:
+
+    # Initialise or reinitialise the surface each time we grab a new frame
+    playing_surface = None
 
     # Get image (replace with webcam feed)
-    # image = cv2.imread('today4.png')  # example of playing surface too small
-    image = cv2.imread('new_surf5.png')  # example of playing surface that is good
+    if count % 2 == 0:
+        image = cv2.imread('today4.png')  # example of playing surface too small
+    else:
+        image = cv2.imread('new_surf5.png')  # example of playing surface that is good
+
+    # Try and obtain a valid playing surface object
+    playing_surface = surface.detect(image)
 
     # Configure the raw original image
     orig_disp = deepcopy(imutils.resize(image, height=300))
@@ -38,8 +46,7 @@ while True:
         trans_disp = deepcopy(imutils.resize(playing_surface.transform, height=300))
         surface.display(timer_disp, cnt_disp, trans_disp)
     else:
-        # Try and obtain a valid playing surface object
-        playing_surface = surface.detect(image)
+        cv2.destroyWindow("Transformed")
         not_found = surface.not_found(deepcopy(orig_disp))
         # Display the countdown timer and the raw original until a valid surface is found
         surface.display(timer_disp, not_found)
@@ -55,6 +62,6 @@ while True:
 
 # save transformed surface (can comment out - was using for testing and sending to Marty)
 cv2.imwrite('Playing_Surface_Transformed.png', playing_surface.transform)
-
+cv2.destroyAllWindows()
 sys.exit(0)
 
