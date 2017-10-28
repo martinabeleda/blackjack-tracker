@@ -57,7 +57,7 @@ def get_surface(cap, count):
         key = cv2.waitKey(delay=1)
 
         # keep displaying images until user enters 'q'
-        if key == ord('q') or key == ord('Q'):
+        if key == ord('a') or key == ord('A'):
             cv2.destroyAllWindows()
             break
 

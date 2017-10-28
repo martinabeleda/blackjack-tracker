@@ -17,16 +17,20 @@ import chips
 ## import jason libraries
 import initialise
 
+## import alvin libraries
+from mainColorTresh import findGesture
+
 rank_path = "card_images"
 font = cv2.FONT_HERSHEY_SIMPLEX
+
 
 def videoTest():
     """ Run the chip detector module by itself """
 
     # set up the camera and set max resolution
     cap = cv2.VideoCapture(1)
-    cap.set(cv2.CAP_PROP_FRAME_WIDTH,9999)
-    cap.set(cv2.CAP_PROP_FRAME_HEIGHT,9999)
+    cap.set(cv2.CAP_PROP_FRAME_WIDTH, 9999)
+    cap.set(cv2.CAP_PROP_FRAME_HEIGHT, 9999)
 
     # Run through countdown and grab playing surface. Returns an surface
     # object.
@@ -35,17 +39,16 @@ def videoTest():
     state = 0
     # If initialisation found a successful transform, else exit the program
     if surface is not None:
-        while(True):
+        while (True):
 
             # Get the next frame
             (flag, img) = cap.read()
+            # Transform using the transformation matrix found during
+            # initialisation
+            transformed = cv2.warpPerspective(img, surface.perspective_matrix,
+                                              (surface.width, surface.height))
 
             if state == 0:
-                # Transform using the transformation matrix found during
-                # initialisation
-                transformed = cv2.warpPerspective(img, surface.perspective_matrix,
-                                                      (surface.width, surface.height))
-
                 img_disp = copy.deepcopy(transformed)
 
                 # Get a list of card objects in the image and draw on temp image
@@ -72,7 +75,12 @@ def videoTest():
                     break
 
             elif state == 1:
-                cv2.imshow("Ori image", img)
+                frame_contour = findGesture(transformed)
+
+                # Show final image with contour
+                # cv2.namedWindow("Gesture Recognition", cv2.WINDOW_NORMAL)
+                cv2.imshow("Gesture Recognition", frame_contour)
+                cv2.resizeWindow("Gesture Recognition", 700, 700)
 
                 key = cv2.waitKey(delay=1)
 
@@ -87,6 +95,7 @@ def videoTest():
     # When everything done, release the capture
     cap.release()
     cv2.destroyAllWindows()
+
 
 # def imageTest():
 #
