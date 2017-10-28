@@ -21,6 +21,9 @@ class PlayingSurface:
         self.img_cnt = []  # Image with contour overlayed on original image
         self.area = []  # Area of the playing surface
         self.area_relative = []  # Relative size of the playing surface wrt original image
+        self.perspective_matrix = []
+        self.width = []
+        self.height = []
 
 
 " This function finds the playing surface in the original image and stores info in an appropriate object "
@@ -179,6 +182,12 @@ def detect(image):
         playing_surface.area = transformed_area
         # Store the relative size of the playing surface wrt the entire image
         playing_surface.area_relative = relative_size
+        # Store the perspective matrix used to get the transformation
+        playing_surface.perspective_matrix = persp_mtx
+        # Store the width of the transformed image
+        playing_surface.width = width
+        # Store the height of the transformed image
+        playing_surface.height = height
 
         # Return the complete playing surface object
         return playing_surface
