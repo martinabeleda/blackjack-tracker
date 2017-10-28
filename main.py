@@ -30,8 +30,9 @@ def videoTest():
 
     # Run through countdown and grab playing surface. Returns an surface
     # object.
-    surface = initialise.get_surface(cap, 5)
+    surface = initialise.get_surface(cap, 15)
 
+    state = 0
     # If initialisation found a successful transform, else exit the program
     if surface is not None:
         while(True):
@@ -39,30 +40,48 @@ def videoTest():
             # Get the next frame
             (flag, img) = cap.read()
 
-            # Transform using the transformation matrix found during
-            # initialisation
-            transformed = cv2.warpPerspective(img, surface.perspective_matrix,
-                                                  (surface.width, surface.height))
+            if state == 0:
+                # Transform using the transformation matrix found during
+                # initialisation
+                transformed = cv2.warpPerspective(img, surface.perspective_matrix,
+                                                      (surface.width, surface.height))
 
-            img_disp = copy.deepcopy(transformed)
+                img_disp = copy.deepcopy(transformed)
 
-            # Get a list of card objects in the image and draw on temp image
-            all_cards = cards.detect(transformed, rank_path)
-            img_disp = cards.display(img_disp, all_cards)
+                # Get a list of card objects in the image and draw on temp image
+                all_cards = cards.detect(transformed, rank_path)
+                img_disp = cards.display(img_disp, all_cards)
 
-            # Find all of the chips and draw them on the temp image
-            all_chips = chips.detect(transformed)
-            img_disp = chips.display(img_disp, all_chips)
+                # Find all of the chips and draw them on the temp image
+                all_chips = chips.detect(transformed)
+                img_disp = chips.display(img_disp, all_chips)
 
-            # configure images for display and then display them
-            cnt_disp = copy.deepcopy(imutils.resize(surface.img_cnt,
-                                                    height=400))
+                # configure images for display and then display them
+                cnt_disp = copy.deepcopy(imutils.resize(surface.img_cnt,
+                                                        height=400))
 
-            cv2.imshow("Playing surface contour", cnt_disp)
-            cv2.imshow("Detected Cards and Chips", img_disp)
+                cv2.imshow("Playing surface contour", cnt_disp)
+                cv2.imshow("Detected Cards and Chips", img_disp)
 
-            if cv2.waitKey(1) & 0xFF == ord('q'):
-                break
+                key = cv2.waitKey(delay=1)
+
+                if key == ord('t'):
+                    cv2.destroyAllWindows()
+                    state = not state
+                elif key == ord('q'):
+                    break
+
+            elif state == 1:
+                cv2.imshow("Ori image", img)
+
+                key = cv2.waitKey(delay=1)
+
+                if key == ord('t'):
+                    cv2.destroyAllWindows()
+                    state = not state
+                elif key == ord('q'):
+                    break
+
     else:
         print('Initialisation failed. No successful transform found')
     # When everything done, release the capture
