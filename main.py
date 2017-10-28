@@ -97,29 +97,30 @@ def videoTest():
     cv2.destroyAllWindows()
 
 
-# def imageTest():
-#
-#     # Get next image of playing area
-#     img = cv2.imread(os.path.join('game_images', 'surface2.png'))
-#
-#     # obtain playing surface object
-#     playing_surface = surface.detect(img)
-#     img_disp = copy.deepcopy(transformed)
-#
-#     # Get a list of card objects in the image and draw on temp image
-#     all_cards = cards.detect(transformed, rank_path)
-#     img_disp = cards.display(img_disp, all_cards)
-#
-#     # Find all of the chips and draw them on the temp image
-#     all_chips = chips.detect(transformed)
-#     img_disp = chips.display(img_disp, all_chips)
-#
-#     # configure images for display and then display them
-#     cnt_disp = copy.deepcopy(imutils.resize(playing_surface.img_cnt, height=300))
-#
-#     cv2.imshow("Playing surface contour", cnt_disp)
-#     cv2.imshow("Detected Cards and Chips", img_disp); cv2.waitKey(0); cv2.destroyAllWindows()
+def imageTest():
+
+    # Get next image of playing area
+    img = cv2.imread(os.path.join('game_images', 'surface2.png'))
+
+    # obtain playing surface object
+    playing_surface = surface.detect(img)
+    transformed = playing_surface.transform
+    img_disp = copy.deepcopy(transformed)
+
+    # Get a list of card objects in the image and draw on temp image
+    all_cards = cards.detect(transformed, rank_path)
+    img_disp = cards.display(img_disp, all_cards)
+
+    # Find all of the chips and draw them on the temp image
+    all_chips = chips.detect(transformed)
+    img_disp = chips.display(img_disp, all_chips)
+
+    # configure images for display and then display them
+    cnt_disp = copy.deepcopy(imutils.resize(playing_surface.img_cnt, height=300))
+
+    cv2.imshow("Playing surface contour", cnt_disp)
+    cv2.imshow("Detected Cards and Chips", img_disp); cv2.waitKey(0); cv2.destroyAllWindows()
 
 ### Module Test Code ###
 if __name__ == "__main__":
-    videoTest()
+    imageTest()
