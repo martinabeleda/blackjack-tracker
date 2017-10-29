@@ -51,12 +51,6 @@ def detect(image):
     # Find contours in the edged image and only keep the largest five (ordered largest to smallest)
     _, contours, _ = cv2.findContours(im_edge.copy(), cv2.RETR_TREE, cv2.CHAIN_APPROX_SIMPLE)
 
-    # Exit immediately if no contours found
-    try:
-        num_contours = contours[0]
-    except:
-        return None
-
     contours = sorted(contours, key=cv2.contourArea, reverse=True)[:5]
 
     # Initialise an index to represent the location of the playing surface in the contours list
@@ -83,6 +77,11 @@ def detect(image):
 
         # Increment the index
         contour_idx += 1
+
+    # Even if there're contours but none of them are 4 points, we want to
+    # return
+    if surface_cnt is None:
+        return None
 
     # Now that we have our contour, we need to determine the top-left, top-right, bottom-right, and
     # bottom-left points so that we can later warp the image -- we'll start by reshaping our contour
@@ -284,12 +283,13 @@ def get_surface(cap, count):
             valid_surface = playing_surface
         else:
             # Add a text overlay in place of the contour image
-            not_found = surface.not_found(deepcopy(orig_disp))
+            not_found_overlay = not_found(deepcopy(orig_disp))
             if valid_surface is not None:
-                display(timer_disp, not_found, imutils.resize(valid_surface.transform, height=300))
+                display(timer_disp, not_found_overlay, imutils.resize(
+                    valid_surface.transform, height=300))
             else:
                 # Display the countdown timer and the raw original until a valid surface is found
-                display(timer_disp, not_found)
+                display(timer_disp, not_found_overlay)
 
         # handling closing of displays in main atm, could shift anywhere though
         key = cv2.waitKey(delay=1)
