@@ -5,7 +5,7 @@ import os
 import cv2
 import copy
 import imutils
-import display as dp
+import display
 
 # import own libraries
 import surface
@@ -118,8 +118,17 @@ def imageTest():
     # configure images for display and then display them
     cnt_disp = copy.deepcopy(imutils.resize(playing_surface.img_cnt, height=300))
 
-    cv2.imshow("Playing surface contour", cnt_disp)
-    cv2.imshow("Detected Cards and Chips", img_disp); cv2.waitKey(0); cv2.destroyAllWindows()
+    # Add dealer and player regions to the displayed surface
+    display.regions(img_disp, playing_surface)
+    display.hand_values(img_disp, playing_surface, all_cards)
+
+    while True:
+        cv2.imshow("Playing surface contour", cnt_disp)
+        cv2.imshow("Detected Cards and Chips", img_disp)
+        key = cv2.waitKey(delay=1)
+        if key == ord('q'):
+            cv2.destroyAllWindows()
+            break
 
 ### Module Test Code ###
 if __name__ == "__main__":

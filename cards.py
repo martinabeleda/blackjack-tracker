@@ -41,21 +41,23 @@ class rank:
 
     def __init__(self):
         self.name = "rank_name"
-        self.img = [] # Thresholded image of card rank
-        self.contour = [] # Contour of rank
+        self.img = []  # Thresholded image of card rank
+        self.contour = []  # Contour of rank
+        self.value = 0  # Value of rank
 
 class card:
     """Structure to store information about cards in the camera image."""
 
     def __init__(self):
-        self.contour = [] # Contour of card
-        self.corner_pts = [] # Corner points of card
-        self.center = [] # Center point of card
-        self.img = [] # 200x300, flattened, grayed, blurred image
-        self.rank_img = [] # Thresholded, sized image of card's rank
-        self.rank_contour = [] # Contour of the rank
-        self.best_rank_match = "Unknown" # Best matched rank
-        self.rank_score = 0 # Difference between rank image and best matched train rank image
+        self.contour = []  # Contour of card
+        self.corner_pts = []  # Corner points of card
+        self.center = []  # Center point of card
+        self.img = []  # 200x300, flattened, grayed, blurred image
+        self.rank_img = []  # Thresholded, sized image of card's rank
+        self.rank_contour = []  # Contour of the rank
+        self.best_rank_match = "Unknown"  # Best matched rank
+        self.rank_score = 0  # Difference between rank image and best matched train rank image
+        self.value = 0  # Same as best rank, but in numerical form
 
     def processCard(self, image):
         """ This function takes an image and contour associated with a card and returns a top-down image of the card """
@@ -139,6 +141,7 @@ class card:
 
         if self.rank_score < MAX_MATCH_SCORE:
             self.best_rank_match = all_ranks[ind].name
+            self.value = all_ranks[ind].value
             #print(self.best_rank_match)
 
 ### Public Functions ###
@@ -256,6 +259,7 @@ def loadRanks(path):
 
     ranks = []
     rank_names = ['Ace', 'Two', 'Three', 'Four', 'Five', 'Six', 'Seven', 'Eight', 'Nine', 'Ten', 'Jack', 'Queen', 'King']
+    rank_values = [11, 2, 3, 4, 5, 6, 7, 8, 9, 10, 10, 10, 10]
 
     for name in rank_names:
 
@@ -268,6 +272,10 @@ def loadRanks(path):
 
         # Store the name
         new_rank.name = name
+
+        # Get index of the name and store the associated value
+        index = [i for i, x in enumerate(rank_names) if x == name]
+        new_rank.value = rank_values[index[0]]
 
         # Store the largest contour
         temp = copy.deepcopy(new_rank.img)
