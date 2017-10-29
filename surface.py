@@ -24,6 +24,8 @@ class PlayingSurface:
         self.perspective_matrix = []
         self.width = []
         self.height = []
+        self.dealer_region = []
+        self.player_region = []
 
 def detect(image):
     " This function finds the playing surface in the original image and stores info in an appropriate object "
@@ -186,6 +188,8 @@ def detect(image):
         playing_surface.width = width
         # Store the height of the transformed image
         playing_surface.height = height
+        playing_surface.dealer_region = np.array([0, int(width / 2)])
+        playing_surface.player_region = np.array([int((width / 2) + 1), int(width)])
 
         # Return the complete playing surface object
         return playing_surface
