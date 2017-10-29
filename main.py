@@ -29,11 +29,11 @@ def videoTest():
 
     # Run through countdown and grab playing surface. Returns an surface
     # object.
-    surface = surface.get_surface(cap, 15)
+    playing_surface = surface.get_surface(cap, 15)
 
     state = 0
     # If initialisation found a successful transform, else exit the program
-    if surface is not None:
+    if playing_surface is not None:
         while (True):
 
             # Get the next frame
@@ -41,8 +41,8 @@ def videoTest():
 
             # Transform using the transformation matrix found during
             # initialisation
-            transformed = cv2.warpPerspective(img, surface.perspective_matrix,
-                                              (surface.width, surface.height))
+            transformed = cv2.warpPerspective(img, playing_surface.perspective_matrix,
+                                              (playing_surface.width, playing_surface.height))
 
             # Start in the card and chip detection state
             if state == 0:
@@ -56,18 +56,14 @@ def videoTest():
                 all_chips = chips.detect(transformed)
                 img_disp = chips.display(img_disp, all_chips)
 
-                # configure images for display and then display them
-                cnt_disp = copy.deepcopy(imutils.resize(surface.img_cnt,
-                                                        height=400))
-
-                cv2.imshow("Playing surface contour", cnt_disp)
-                cv2.imshow("Detected Cards and Chips", img_disp)
-
-                key = cv2.waitKey(delay=1)
-
                 # Add dealer and player regions to the displayed surface
                 display.regions(img_disp, playing_surface)
                 display.hand_values(img_disp, playing_surface, all_cards)
+
+                cv2.imshow("Detected Cards and Chips", img_disp)
+                cv2.moveWindow("Detected Cards and Chips", 50, 50)
+
+                key = cv2.waitKey(delay=1)
 
                 if key == ord('t'):
                     cv2.destroyAllWindows()
@@ -83,6 +79,7 @@ def videoTest():
                 # cv2.namedWindow("Gesture Recognition", cv2.WINDOW_NORMAL)
                 cv2.imshow("Gesture Recognition", frame_contour)
                 cv2.resizeWindow("Gesture Recognition", 700, 700)
+                cv2.moveWindow("Gesture Recognition", 50, 50)
 
                 key = cv2.waitKey(delay=1)
 
@@ -144,4 +141,4 @@ def imageTest():
 
 ### Module Test Code ###
 if __name__ == "__main__":
-    imageTest()
+    videoTest()
