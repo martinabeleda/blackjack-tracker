@@ -1,7 +1,35 @@
+""" This module contains functions and structures for processing blackjack hand gestures """
+
+### Import packages
+import cv2
+import copy
+import math
+import numpy as np
+
+### Constants ###
+
+### Functions ###
+
+def detect(frame):
+
+    font = cv2.FONT_HERSHEY_SIMPLEX
+
+    result, frame_contour = color_find_hand(frame)
+
+    if result == 1:
+        cv2.putText(frame_contour, 'Hit!!', (40, 400), font, 3,
+                    (0, 255, 0), 2, cv2.LINE_AA)
+    elif result == 2:
+        cv2.putText(frame_contour, 'Stand!!', (40, 400), font, 3,
+                    (0, 255, 0), 2, cv2.LINE_AA)
+    else:
+        cv2.putText(frame_contour, 'Sign not recognised', (40, 400),
+                    font, 2,
+                    (0, 0, 255), 2, cv2.LINE_AA)
+
+    return frame_contour
+
 def color_find_hand(frame):
-    import cv2
-    import copy
-    import numpy as np
 
     show_process = 0
     # --------------------- Pre-processing stage ---------------------
@@ -84,8 +112,7 @@ def color_find_hand(frame):
     return [result, drawn_frame]
 
 def matching_Hu(contour, tresh_hit=0.15, tresh_stand=0.2):
-    import numpy as np
-    import cv2
+
     # -------- save current contour as template -----------
     # np.save('hit', biggest_contour)
 
@@ -111,7 +138,6 @@ def matching_Hu(contour, tresh_hit=0.15, tresh_stand=0.2):
     return result
 
 def match_defects(contour,frame):
-    import cv2
 
     # Find the convex hull and the defects
     hull = cv2.convexHull(contour,returnPoints = False)
@@ -129,6 +155,7 @@ def match_defects(contour,frame):
     palm_region = y + h - (h / 2)
 
     num_points = 0
+    
     # Run through all the contours and find the fingers
     for i in range(defects.shape[0]):
         s, e, f, d = defects[i, 0]
@@ -163,12 +190,13 @@ def match_defects(contour,frame):
     return [result, frame]
 
 def eucl_distance(val1, val2):
-    import math
+
     dist = math.sqrt((val1[0] - val2[0]) ** 2 + (val1[1] - val2[1]) ** 2)
+
     return dist
 
 def findAngle(start, end, far):
-    import math
+
     l1 = eucl_distance(far, start)
     l2 = eucl_distance(far, end)
     dot = (start[0] - far[0]) * (end[0] - far[0]) \
@@ -176,4 +204,5 @@ def findAngle(start, end, far):
 
     angle = math.acos(dot / (l1 * l2))
     angle = math.degrees(angle)
+
     return angle

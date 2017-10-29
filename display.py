@@ -1,9 +1,10 @@
+""" This module containts constants and functions for display """
+
+### Import standard libraries ###
 import cv2
 from copy import deepcopy
 
-""" This module containts constants and functions for display """
-
-# Drawing
+# Drawing constants
 RED = (0,0,255)
 GREEN = (0,255,0)
 BLUE = (255,0,0)

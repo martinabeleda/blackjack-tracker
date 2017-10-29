@@ -1,26 +1,26 @@
 """ This program takes an image of a blackjack playing surface and identifies the cards and chips """
 
-### Import necessary packages
+### Import necessary packages ###
 import os
 import cv2
 import copy
 import imutils
 import display
 
-# Import own libraries
+### Import own libraries ###
 import surface
 import cards
 import chips
-import initialise
-from mainColorTresh import findGesture
+import gesture
 
-### Constants
-rank_path = "card_images"
+### Constants ###
+rank_path = 'rank_images'
+benchmark_img_dir = 'benchmark_images'
+benchmark_res_dir = os.path.join('benchmark_images','results')
 font = cv2.FONT_HERSHEY_SIMPLEX
 
-
 def videoTest():
-    """ Run the chip detector module by itself """
+    """ Run the blackjack program on a webcam """
 
     # set up the camera and set max resolution
     cap = cv2.VideoCapture(1)
@@ -29,7 +29,7 @@ def videoTest():
 
     # Run through countdown and grab playing surface. Returns an surface
     # object.
-    surface = initialise.get_surface(cap, 15)
+    surface = surface.get_surface(cap, 15)
 
     state = 0
     # If initialisation found a successful transform, else exit the program
@@ -77,7 +77,7 @@ def videoTest():
 
             # Gesture recognition state            
             elif state == 1:
-                frame_contour = findGesture(transformed)
+                frame_contour = gesture.detect(transformed)
 
                 # Show final image with contour
                 # cv2.namedWindow("Gesture Recognition", cv2.WINDOW_NORMAL)
@@ -94,12 +94,14 @@ def videoTest():
 
     else:
         print('Initialisation failed. No successful transform found')
+
     # When everything done, release the capture
     cap.release()
     cv2.destroyAllWindows()
 
 
 def imageTest():
+    """ Run the blackjack program on test images """
 
     # Get all the images in the directory
     listing = os.listdir('benchmark_images')
@@ -109,7 +111,7 @@ def imageTest():
         if files.endswith('.png'):
 
             # Get next image of playing area
-            img = cv2.imread(os.path.join('benchmark_images',files))
+            img = cv2.imread(os.path.join(benchmark_img_dir,files))
 
             # obtain playing surface object
             playing_surface = surface.detect(img)
@@ -137,7 +139,7 @@ def imageTest():
                 key = cv2.waitKey(delay=1)
                 if key == ord('q'):
                     cv2.destroyAllWindows()
-                    cv2.imwrite(os.path.join('benchmark_images','results',files),img_disp)
+                    cv2.imwrite(os.path.join(benchmark_res_dir,files),img_disp)
                     break
 
 ### Module Test Code ###

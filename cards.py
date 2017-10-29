@@ -11,6 +11,10 @@ from matplotlib import pyplot as plt
 
 ### Constants ###
 
+# Debugging
+ALVIN_LOVES_DEBUG = 0
+WRITE_IMAGES = 0
+
 # Card dimensions
 CARD_MAX_AREA = 50000
 CARD_MIN_AREA = 2000
@@ -31,10 +35,6 @@ POLY_ACC_CONST = 0.02
 HU_MOMENTS = 0
 TEMPLATE_MATCHING = 1
 MAX_MATCH_SCORE = 2500
-
-# Debugging
-ALVIN_LOVES_DEBUG = 0
-WRITE_IMAGES = 0
 
 ### Structures ###
 
@@ -362,7 +362,7 @@ def videoTest():
     cap.set(cv2.CAP_PROP_FRAME_HEIGHT,9999)
 
     # Load the card rank images into a list of rank objects
-    rank_path = "card_images"
+    rank_path = "rank_images"
     ranks = loadRanks(rank_path)
 
     while(True):
@@ -391,7 +391,7 @@ def videoTest():
 def imageTest():
     """ Test the cards module on a single flattened image """
 
-    rank_path = "card_images"
+    rank_path = "rank_images"
     font = cv2.FONT_HERSHEY_SIMPLEX
 
     # Get next image of playing area
