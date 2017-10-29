@@ -106,8 +106,6 @@ def imageTest():
     playing_surface = surface.detect(img)
     transformed = playing_surface.transform
     img_disp = copy.deepcopy(transformed)
-    print(playing_surface.dealer_region)
-    print(playing_surface.player_region)
 
     # Get a list of card objects in the image and draw on temp image
     all_cards = cards.detect(transformed, rank_path)
@@ -122,6 +120,7 @@ def imageTest():
 
     # Add dealer and player regions to the displayed surface
     display.regions(img_disp, playing_surface)
+    display.hand_values(img_disp, playing_surface, all_cards)
 
     while True:
         cv2.imshow("Playing surface contour", cnt_disp)
