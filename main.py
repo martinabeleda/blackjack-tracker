@@ -7,19 +7,14 @@ import copy
 import imutils
 import display
 
-# import own libraries
+# Import own libraries
 import surface
 import cards
 import chips
-
-### Constants
-
-## import jason libraries
 import initialise
-
-## import alvin libraries
 from mainColorTresh import findGesture
 
+### Constants
 rank_path = "card_images"
 font = cv2.FONT_HERSHEY_SIMPLEX
 
@@ -43,11 +38,13 @@ def videoTest():
 
             # Get the next frame
             (flag, img) = cap.read()
+
             # Transform using the transformation matrix found during
             # initialisation
             transformed = cv2.warpPerspective(img, surface.perspective_matrix,
                                               (surface.width, surface.height))
 
+            # Start in the card and chip detection state
             if state == 0:
                 img_disp = copy.deepcopy(transformed)
 
@@ -68,12 +65,17 @@ def videoTest():
 
                 key = cv2.waitKey(delay=1)
 
+                # Add dealer and player regions to the displayed surface
+                display.regions(img_disp, playing_surface)
+                display.hand_values(img_disp, playing_surface, all_cards)
+
                 if key == ord('t'):
                     cv2.destroyAllWindows()
                     state = not state
                 elif key == ord('q'):
                     break
 
+            # Gesture recognition state            
             elif state == 1:
                 frame_contour = findGesture(transformed)
 
@@ -99,36 +101,44 @@ def videoTest():
 
 def imageTest():
 
-    # Get next image of playing area
-    img = cv2.imread(os.path.join('game_images', 'surface2.png'))
+    # Get all the images in the directory
+    listing = os.listdir('benchmark_images')
 
-    # obtain playing surface object
-    playing_surface = surface.detect(img)
-    transformed = playing_surface.transform
-    img_disp = copy.deepcopy(transformed)
+    # Loop through the test images
+    for files in listing:
+        if files.endswith('.png'):
 
-    # Get a list of card objects in the image and draw on temp image
-    all_cards = cards.detect(transformed, rank_path)
-    img_disp = cards.display(img_disp, all_cards)
+            # Get next image of playing area
+            img = cv2.imread(os.path.join('benchmark_images',files))
 
-    # Find all of the chips and draw them on the temp image
-    all_chips = chips.detect(transformed)
-    img_disp = chips.display(img_disp, all_chips)
+            # obtain playing surface object
+            playing_surface = surface.detect(img)
+            transformed = playing_surface.transform
+            img_disp = copy.deepcopy(transformed)
 
-    # configure images for display and then display them
-    cnt_disp = copy.deepcopy(imutils.resize(playing_surface.img_cnt, height=300))
+            # Get a list of card objects in the image and draw on temp image
+            all_cards = cards.detect(transformed, rank_path)
+            img_disp = cards.display(img_disp, all_cards)
 
-    # Add dealer and player regions to the displayed surface
-    display.regions(img_disp, playing_surface)
-    display.hand_values(img_disp, playing_surface, all_cards)
+            # Find all of the chips and draw them on the temp image
+            all_chips = chips.detect(transformed)
+            img_disp = chips.display(img_disp, all_chips)
 
-    while True:
-        cv2.imshow("Playing surface contour", cnt_disp)
-        cv2.imshow("Detected Cards and Chips", img_disp)
-        key = cv2.waitKey(delay=1)
-        if key == ord('q'):
-            cv2.destroyAllWindows()
-            break
+            # configure images for display and then display them
+            cnt_disp = copy.deepcopy(imutils.resize(playing_surface.img_cnt, height=300))
+
+            # Add dealer and player regions to the displayed surface
+            #display.regions(img_disp, playing_surface)
+            #display.hand_values(img_disp, playing_surface, all_cards)
+
+            while True:
+                #cv2.imshow("Playing surface contour", cnt_disp)
+                cv2.imshow("Detected Cards and Chips", img_disp)
+                key = cv2.waitKey(delay=1)
+                if key == ord('q'):
+                    cv2.destroyAllWindows()
+                    cv2.imwrite(os.path.join('benchmark_images','results',files),img_disp)
+                    break
 
 ### Module Test Code ###
 if __name__ == "__main__":

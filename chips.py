@@ -39,8 +39,7 @@ def detect(image):
 
     # Threshold with Otsu's method
     (_, thresh) = cv2.threshold(blur, 0, 255, cv2.THRESH_BINARY+cv2.THRESH_OTSU)
-    #cv2.imshow("Thresholded playing area", thresh); cv2.waitKey(0);
-    # cv2.destroyAllWindows()
+    #cv2.imshow("Thresholded playing area", thresh); cv2.waitKey(0); cv2.destroyAllWindows()
 
     # Morphological closing
     kernel = cv2.getStructuringElement(cv2.MORPH_ELLIPSE, (10,10))

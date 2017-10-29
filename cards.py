@@ -1,6 +1,6 @@
 """ This module contains functions and structures for processing playing card images """
 
-### Import necessary packages
+### Import packages
 import cv2
 import os
 import copy
@@ -12,7 +12,7 @@ from matplotlib import pyplot as plt
 ### Constants ###
 
 # Card dimensions
-CARD_MAX_AREA = 100000
+CARD_MAX_AREA = 50000
 CARD_MIN_AREA = 2000
 
 CORNER_HEIGHT = 80
@@ -30,10 +30,12 @@ POLY_ACC_CONST = 0.02
 # Matching algorithms
 HU_MOMENTS = 0
 TEMPLATE_MATCHING = 1
-
 MAX_MATCH_SCORE = 2500
 
+# Debugging
 ALVIN_LOVES_DEBUG = 0
+WRITE_IMAGES = 0
+
 ### Structures ###
 
 class rank:
@@ -80,22 +82,25 @@ class card:
         # Create a flattened image of the isolated card
         self.img = flattener(gray, pts, w, h)
         if ALVIN_LOVES_DEBUG:
-            cv2.imshow("This card flattened", self.img); cv2.waitKey(0);
-            cv2.destroyAllWindows()
+            cv2.imshow("This card flattened", self.img); cv2.waitKey(0); cv2.destroyAllWindows()
 
-        # Crop the corner from the card
-        rank_img = self.img[0:CORNER_HEIGHT, 0:CORNER_WIDTH]
-        rank_img_padded = np.pad(rank_img, 5, 'constant', constant_values=255)
+        # Crop the corner from the card start from (5,5) to cut out dark edges
+        rank_img = self.img[5:CORNER_HEIGHT, 5:CORNER_WIDTH]
         if ALVIN_LOVES_DEBUG:
-            cv2.imshow("This rank", rank_img); cv2.waitKey(0);
-            cv2.destroyAllWindows()
+            cv2.imshow("This rank", rank_img); cv2.waitKey(0); cv2.destroyAllWindows()
+
+        # Assuming that a majority of the area is the background colour of the card, pad
+        # out the edges with the median intensity value
+        pad_value = np.median(rank_img)
+        rank_img_padded = np.pad(rank_img, 5, 'constant', constant_values=pad_value)
+        if ALVIN_LOVES_DEBUG:
+            cv2.imshow("This rank padded", rank_img_padded); cv2.waitKey(0); cv2.destroyAllWindows()
 
         # Thresholding using Otsu's method
         (_, thresh) = cv2.threshold(rank_img_padded, 0, 255, cv2.THRESH_BINARY+cv2.THRESH_OTSU)
         thresh = cv2.bitwise_not(thresh)
         if ALVIN_LOVES_DEBUG:
-            cv2.imshow("This rank thresh", thresh); cv2.waitKey(0);
-            cv2.destroyAllWindows()
+            cv2.imshow("This rank thresh", thresh); cv2.waitKey(0); cv2.destroyAllWindows()
 
         # Opening
         #kernel = np.ones((2,2),np.uint8)
@@ -113,12 +118,13 @@ class card:
             self.rank_contour = this_rank_cnts[0]
             x1,y1,w1,h1 = cv2.boundingRect(this_rank_cnts[0])
             rank_crop = thresh[y1:y1+h1, x1:x1+w1]
-
             self.rank_img = cv2.resize(rank_crop, (RANK_WIDTH,RANK_HEIGHT), 0, 0)
+
             if ALVIN_LOVES_DEBUG:
-                cv2.imshow("Cropped Rank", self.rank_img); cv2.waitKey(0);
-                cv2.destroyAllWindows()
-            #cv2.imwrite('img.png', self.rank_img)
+                cv2.imshow("Cropped Rank", self.rank_img); cv2.waitKey(0); cv2.destroyAllWindows()
+            
+            if WRITE_IMAGES:
+                cv2.imwrite('img.png', self.rank_img)
 
     def matchRank(self, all_ranks, match_method):
         """ This function returns the best rank match of a given card image """
@@ -197,9 +203,7 @@ def findCards(image):
     blur = cv2.GaussianBlur(gray, (5,5), 0)
 
     # Threshold with Otsu's method
-    #plt.hist(blur.ravel(),256,[0,256]); plt.show() # Check if the image is bimodal
     (_, thresh) = cv2.threshold(blur, 0, 255, cv2.THRESH_BINARY+cv2.THRESH_OTSU)
-    #cv2.imshow("Thresholded playing area", thresh); cv2.waitKey(0); cv2.destroyAllWindows()
 
     # Find contours and sort by size
     (_, cnts, hier) = cv2.findContours(thresh, cv2.RETR_TREE, cv2.CHAIN_APPROX_SIMPLE)
@@ -241,13 +245,6 @@ def findCards(image):
                 # Add the new card to the list
                 card_info.append(new_card)
 
-                ### Debugging ###
-                #print('size = {}, acc = {}, numCorners = {}'.format(size, accuracy, len(approx)))
-                #temp_img = copy.deepcopy(image)
-                #cv2.drawContours(temp_img, cnts_sort, i, (0,255,0), 3)
-                #cv2.imshow("This Card Contour", temp_img); cv2.waitKey(0); cv2.destroyAllWindows()
-                
-
     # If there are no contours, do nothing
     except:
         pass
@@ -282,11 +279,6 @@ def loadRanks(path):
         (_, cnts, _) = cv2.findContours(temp, cv2.RETR_TREE, cv2.CHAIN_APPROX_SIMPLE)
         cnts = sorted(cnts, key=cv2.contourArea,reverse=True)
         new_rank.contour = cnts[0]
-
-        ### Debugging ###
-        #rank_col = cv2.cvtColor(new_rank.img, cv2.COLOR_GRAY2BGR)	
-        #cv2.drawContours(rank_col, cnts, 0, (0,255,0), 3)
-        #cv2.imshow("Largest Rank Contour", rank_col); cv2.waitKey(0); cv2.destroyAllWindows()
 
         # Add to the list
         ranks.append(new_rank)
