@@ -126,7 +126,7 @@ class card:
             if WRITE_IMAGES:
                 cv2.imwrite('img.png', self.rank_img)
 
-    def matchRank(self, all_ranks, match_method):
+    def matchRank(self, all_ranks, match_method, last_cards):
         """ This function returns the best rank match of a given card image """
         
         # List to store rank match scores
@@ -145,14 +145,28 @@ class card:
         ind = np.argmin(match_scores)      
         self.rank_score = match_scores[ind]
 
+        # Determine if this is a valid match    
         if self.rank_score < MAX_MATCH_SCORE:
             self.best_rank_match = all_ranks[ind].name
             self.value = all_ranks[ind].value
             #print(self.best_rank_match)
 
+        # Look at the previous cards list to help reduce flickering
+        if ((self.best_rank_match == "Unknown") and (len(last_cards) != 0)):
+
+            # Find a card in the last image that matches the coordinate of this card
+            for i in range(len(last_cards)):
+
+                cent_x, cent_y = self.center
+                last_x, last_y = last_cards[i].center
+
+                if ((abs(cent_x-last_x) < 10) and (abs(centy-last_y)<10)):
+                    self.best_rank_match = last_cards[ind].best_rank_match
+                    self.value = last_cards[ind].valuename
+
 ### Public Functions ###
 
-def detect(image, rank_path):
+def detect(image, rank_path, last_cards):
     """ Returns a list of card objects containing the cards within a given image """
     
     # Load the card rank images into a list of rank objects
@@ -167,7 +181,7 @@ def detect(image, rank_path):
         all_cards[i].processCard(image)
 
         # Find the best rank match for this card
-        all_cards[i].matchRank(ranks, TEMPLATE_MATCHING)
+        all_cards[i].matchRank(ranks, TEMPLATE_MATCHING, last_cards)
 
     return all_cards
 

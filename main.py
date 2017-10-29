@@ -27,6 +27,9 @@ def videoTest():
     cap.set(cv2.CAP_PROP_FRAME_WIDTH, 9999)
     cap.set(cv2.CAP_PROP_FRAME_HEIGHT, 9999)
 
+    # Set up a historical list of cards
+    last_cards = []
+
     # Run through countdown and grab playing surface. Returns an surface
     # object.
     surface = surface.get_surface(cap, 15)
@@ -49,7 +52,8 @@ def videoTest():
                 img_disp = copy.deepcopy(transformed)
 
                 # Get a list of card objects in the image and draw on temp image
-                all_cards = cards.detect(transformed, rank_path)
+                all_cards = cards.detect(transformed, rank_path, last_cards)
+                last_cards = copy.deepcopy(all_cards)
                 img_disp = cards.display(img_disp, all_cards)
 
                 # Find all of the chips and draw them on the temp image
@@ -106,6 +110,8 @@ def imageTest():
     # Get all the images in the directory
     listing = os.listdir('benchmark_images')
 
+    last_cards = []
+
     # Loop through the test images
     for files in listing:
         if files.endswith('.png'):
@@ -119,7 +125,7 @@ def imageTest():
             img_disp = copy.deepcopy(transformed)
 
             # Get a list of card objects in the image and draw on temp image
-            all_cards = cards.detect(transformed, rank_path)
+            all_cards = cards.detect(transformed, rank_path, last_cards)
             img_disp = cards.display(img_disp, all_cards)
 
             # Find all of the chips and draw them on the temp image
