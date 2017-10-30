@@ -72,11 +72,11 @@ def hand_values(image, surface_obj, cards, bg=True, padded=True):
     value_1 = dealer_tally
     value_2 = player_tally
 
-    # Pad the values with a leading zero if optional padded argument is set
+    # Pad the values with a leading space if optional padded argument is set
     # Convert to string in either case
     if padded:
-        val_disp_1 = str(format(value_1, '02d'))
-        val_disp_2 = str(format(value_2, '02d'))
+        val_disp_1 = str(format(value_1, '2d'))
+        val_disp_2 = str(format(value_2, '2d'))
     else:
         val_disp_1 = str(value_1)
         val_disp_2 = str(value_2)
@@ -101,4 +101,38 @@ def hand_values(image, surface_obj, cards, bg=True, padded=True):
                 cv2.FONT_HERSHEY_SIMPLEX, 2, (0, 0, 0), 2, cv2.LINE_AA)
     cv2.putText(image, val_disp_2, (surface_obj.dealer_region[1] + x_offset, y_offset),
                 cv2.FONT_HERSHEY_SIMPLEX, 2, (255, 255, 255), 2, cv2.LINE_AA)
+    return
+
+
+def bet(image, surface_obj, chips, chip_value=5, bg=True, padded=True):
+    bet_amt = chip_value * len(chips)
+
+    # Pad the bet amount with a leading space if optional padded argument is
+    #  set; convert to string in either case
+    if padded:
+        bet_disp = str('Bet: ' + format(bet_amt, '2d'))
+    else:
+        bet_disp = str('Bet: ' + str(bet_amt))
+    # Add the semi-transparent bg box if requested
+    if bg:
+        overlay = deepcopy(image)
+        cv2.rectangle(overlay, (surface_obj.player_region[1] - 290,
+                                surface_obj.player_region[0] - 120),
+                      (surface_obj.player_region[1],
+                       surface_obj.player_region[0]), (0, 0,
+                                                                     0), -1)
+        alpha = 0.3
+        cv2.addWeighted(overlay, alpha, image, 1 - alpha,
+                        0, image)
+    # Setup offsets for bet amount printing
+    x_offset = surface_obj.player_region[1] - 260
+    y_offset = surface_obj.player_region[0] - 50
+    shadow_offset = 2
+    # Add the bet amount to the display
+    cv2.putText(image, bet_disp, (x_offset + shadow_offset, y_offset +
+                           shadow_offset), cv2.FONT_HERSHEY_SIMPLEX,
+                2, (0, 0, 0), 2, cv2.LINE_AA)
+    cv2.putText(image, bet_disp, (x_offset, y_offset), cv2.FONT_HERSHEY_SIMPLEX, 2,
+                (255, 255, 255), 2,
+                cv2.LINE_AA)
     return
