@@ -10,7 +10,7 @@ from datetime import datetime
 # Set the cutoff limit for detected surfaces
 # e.g. 0.5 means a surface is only valid if it occupies at
 # least half of the entire image space from the original image
-cutoff = 0.5
+cutoff = 0.03
 
 class PlayingSurface:
     " Structure to store information about the playing surface. "
@@ -161,7 +161,7 @@ def detect(image):
     transformed = cv2.warpPerspective(original_image, persp_mtx, (width, height))
 
     # Get the area of the surface (pixels^2)
-    transformed_area = transformed.shape[0] * transformed.shape[1]
+    transformed_area = cv2.contourArea(surface_cnt)
 
     # Get the area of the original image for a comparison (pixels^2)
     original_image_area = original_image.shape[0] * original_image.shape[1]
