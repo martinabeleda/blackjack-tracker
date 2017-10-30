@@ -29,7 +29,7 @@ def videoTest():
 
     # Run through countdown and grab playing surface. Returns an surface
     # object.
-    playing_surface = surface.get_surface(cap, 15)
+    playing_surface = surface.get_surface(cap, 100)
 
     state = 0
     # If initialisation found a successful transform, else exit the program
@@ -59,8 +59,9 @@ def videoTest():
                 # Add dealer and player regions to the displayed surface
                 display.regions(img_disp, playing_surface)
                 display.hand_values(img_disp, playing_surface, all_cards)
+                display.bet(img_disp, playing_surface, all_chips)
 
-                cv2.imshow("Detected Cards and Chips", img_disp)
+                cv2   .imshow("Detected Cards and Chips", img_disp)
                 cv2.moveWindow("Detected Cards and Chips", 50, 50)
 
                 key = cv2.waitKey(delay=1)

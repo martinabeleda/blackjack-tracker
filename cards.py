@@ -19,6 +19,9 @@ WRITE_IMAGES = 0
 CARD_MAX_AREA = 50000
 CARD_MIN_AREA = 2000
 
+CARD_MAX_PERIM = 600
+CARD_MIN_PERIM = 200
+
 CORNER_HEIGHT = 80
 CORNER_WIDTH = 50
 
@@ -196,7 +199,7 @@ def findCards(image):
     # List to store card objects
     card_info = []
 
-    # Convert to grayscale
+    # Convert to grayscale0
     gray = cv2.cvtColor(image, cv2.COLOR_BGR2GRAY)	
 
     # Gaussian blur
@@ -237,7 +240,8 @@ def findCards(image):
             # Cards are determined to have an area within a given range,
             # have 4 corners and have no parents
             if ((size < CARD_MAX_AREA) and (size > CARD_MIN_AREA) 
-                and (len(approx) == 4)):# and (hier_sort[i][3] == -1)):                
+                and (len(approx) == 4) and (hier_sort[i][3] == -1)
+                and (peri < CARD_MAX_PERIM)):
                 new_card = card()
                 new_card.contour = cnts_sort[i]  
                 new_card.corner_pts = np.float32(approx)
@@ -344,9 +348,23 @@ def flattener(image, pts, w, h):
     # calculate the perspective transform matrix and warp the perspective to grab the target
     M = cv2.getPerspectiveTransform(rect, dst)
     playing_card = cv2.warpPerspective(image, M, (maxWidth, maxHeight))
-    
-    if playing_card.shape[1] > playing_card.shape[0]:
+
+    h = playing_card.shape[0]
+    w = playing_card.shape[1]
+    crop_amt = 0.25
+
+    tl_crop = playing_card[0:int(h * crop_amt), 0:int(w * crop_amt)]
+    # cv2.imshow("tl", tl_crop); cv2.waitKey(0); cv2.destroyAllWindows()
+
+
+    tr_crop = playing_card[0:int(h * crop_amt), int(w * (1 - crop_amt)):w]
+    # cv2.imshow("tr", tr_crop); cv2.waitKey(0); cv2.destroyAllWindows()
+
+    if np.sum(tl_crop) > np.sum(tr_crop):
+        # cv2.imshow("pre", playing_card); cv2.waitKey(0);
+        # cv2.destroyAllWindows()
         playing_card = imutils.rotate_bound(playing_card, 90)
+        # cv2.imshow("post", playing_card); cv2.waitKey(0); cv2.destroyAllWindows()
 
     resized = cv2.resize(playing_card, (CARD_WIDTH, CARD_HEIGHT))
 
