@@ -160,7 +160,7 @@ class card:
                 cent_x, cent_y = self.center
                 last_x, last_y = last_cards[i].center
 
-                if ((abs(cent_x-last_x) < 10) and (abs(centy-last_y)<10)):
+                if ((abs(cent_x-last_x) < 10) and (abs(cent_y-last_y)<10)):
                     self.best_rank_match = last_cards[ind].best_rank_match
                     self.value = last_cards[ind].valuename
 

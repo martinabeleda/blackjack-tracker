@@ -32,7 +32,7 @@ def videoTest():
 
     # Run through countdown and grab playing surface. Returns an surface
     # object.
-    playing_surface = surface.get_surface(cap, 15)
+    playing_surface = surface.get_surface(cap, 1000)
 
     state = 0
     # If initialisation found a successful transform, else exit the program
