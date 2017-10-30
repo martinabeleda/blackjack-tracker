@@ -7,7 +7,6 @@ import copy
 import imutils
 import numpy as np
 import display as dp
-from matplotlib import pyplot as plt
 
 ### Constants ###
 
@@ -19,7 +18,7 @@ WRITE_IMAGES = 0
 CARD_MAX_AREA = 50000
 CARD_MIN_AREA = 2000
 
-CARD_MAX_PERIM = 600
+CARD_MAX_PERIM = 1000
 CARD_MIN_PERIM = 200
 
 CORNER_HEIGHT = 80
@@ -37,7 +36,7 @@ POLY_ACC_CONST = 0.02
 # Matching algorithms
 HU_MOMENTS = 0
 TEMPLATE_MATCHING = 1
-MAX_MATCH_SCORE = 2500
+MAX_MATCH_SCORE = 2200
 
 ### Structures ###
 
@@ -70,7 +69,6 @@ class card:
         # Find width and height of card's bounding rectangle
         x, y, w, h = cv2.boundingRect(self.contour)
         self.width, self.height = w, h
-        temp = copy.deepcopy(image)
 
         # Find the centre of the card
         pts = self.corner_pts
@@ -104,11 +102,6 @@ class card:
         thresh = cv2.bitwise_not(thresh)
         if ALVIN_LOVES_DEBUG:
             cv2.imshow("This rank thresh", thresh); cv2.waitKey(0); cv2.destroyAllWindows()
-
-        # Opening
-        #kernel = np.ones((2,2),np.uint8)
-        #opening = cv2.morphologyEx(thresh, cv2.MORPH_OPEN, kernel)
-        #cv2.imshow("This rank opened", opening); cv2.waitKey(0); cv2.destroyAllWindows()
 
         # Find the largest contour
         temp_thresh = copy.deepcopy(thresh)
@@ -152,7 +145,6 @@ class card:
         if self.rank_score < MAX_MATCH_SCORE:
             self.best_rank_match = all_ranks[ind].name
             self.value = all_ranks[ind].value
-            #print(self.best_rank_match)
 
         # Look at the previous cards list to help reduce flickering
         if ((self.best_rank_match == "Unknown") and (len(last_cards) != 0)):
@@ -164,8 +156,8 @@ class card:
                 last_x, last_y = last_cards[i].center
 
                 if ((abs(cent_x-last_x) < 10) and (abs(cent_y-last_y)<10)):
-                    self.best_rank_match = last_cards[ind].best_rank_match
-                    self.value = last_cards[ind].valuename
+                    self.best_rank_match = last_cards[i].best_rank_match
+                    self.value = last_cards[i].value
 
 ### Public Functions ###
 
@@ -201,7 +193,12 @@ def display(image, all_cards):
         
         cv2.drawContours(image, [all_cards[i].contour], 0, cnt_col, 2)
         text_pos = (all_cards[i].center[0]-20, all_cards[i].center[1])
-        cv2.putText(image, all_cards[i].best_rank_match, text_pos, cv2.FONT_HERSHEY_SIMPLEX, 0.7, dp.MAGENTA, 2, cv2.LINE_AA)
+        cv2.putText(image, all_cards[i].best_rank_match, (text_pos[0] + 2,
+                                                          text_pos[1] + 2),
+                    cv2.FONT_HERSHEY_SIMPLEX, 1, (0, 0, 0), 2,
+                    cv2.LINE_AA)
+        cv2.putText(image, all_cards[i].best_rank_match, text_pos,
+                    cv2.FONT_HERSHEY_SIMPLEX, 1, dp.MAGENTA, 2, cv2.LINE_AA)
 
     return image
 
@@ -368,17 +365,11 @@ def flattener(image, pts, w, h):
     crop_amt = 0.25
 
     tl_crop = playing_card[0:int(h * crop_amt), 0:int(w * crop_amt)]
-    # cv2.imshow("tl", tl_crop); cv2.waitKey(0); cv2.destroyAllWindows()
-
-
     tr_crop = playing_card[0:int(h * crop_amt), int(w * (1 - crop_amt)):w]
-    # cv2.imshow("tr", tr_crop); cv2.waitKey(0); cv2.destroyAllWindows()
 
     if np.sum(tl_crop) > np.sum(tr_crop):
-        # cv2.imshow("pre", playing_card); cv2.waitKey(0);
-        # cv2.destroyAllWindows()
+
         playing_card = imutils.rotate_bound(playing_card, 90)
-        # cv2.imshow("post", playing_card); cv2.waitKey(0); cv2.destroyAllWindows()
 
     resized = cv2.resize(playing_card, (CARD_WIDTH, CARD_HEIGHT))
 

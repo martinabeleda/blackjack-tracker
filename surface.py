@@ -49,7 +49,8 @@ def detect(image):
     im_edge = cv2.Canny(im_blur, 30, 200)
 
     # Find contours in the edged image and only keep the largest five (ordered largest to smallest)
-    _, contours, _ = cv2.findContours(im_edge.copy(), cv2.RETR_TREE, cv2.CHAIN_APPROX_SIMPLE)
+    _, contours, _ = cv2.findContours(im_edge.copy(), cv2.RETR_TREE,
+                                      cv2.CHAIN_APPROX_SIMPLE)
 
     contours = sorted(contours, key=cv2.contourArea, reverse=True)[:5]
 
@@ -71,6 +72,7 @@ def detect(image):
         # because the contours are ordered largest to smallest and we want the largest four-point contour
         if len(curr_cnt) == 4:
             # Draw the contour over the image (to be displayed later)
+            # image = im_edge
             cv2.drawContours(image, contours, contourIdx=contour_idx, color=(255, 180, 0), thickness=2)
             surface_cnt = curr_cnt
             break
@@ -135,6 +137,9 @@ def detect(image):
     heightB = np.sqrt(((top_left_point[0] - bottom_left_point[0]) ** 2) +
                       ((top_left_point[1] - bottom_left_point[1]) ** 2))
     height = max(int(heightA), int(heightB))
+
+    height = 800
+    width = int(1.8 * height)
 
     # Configure the four points of the destination image for the transform function
     # Noting that the origin is the top-left point with x positive to the right and

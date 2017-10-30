@@ -10,21 +10,24 @@ import numpy as np
 
 ### Functions ###
 
-def detect(frame):
+def detect(frame, surface_obj):
 
     font = cv2.FONT_HERSHEY_SIMPLEX
 
     result, frame_contour = color_find_hand(frame)
 
+    x_pos = surface_obj.player_region[0] + 100
+    y_pos = 160
+
     if result == 1:
-        cv2.putText(frame_contour, 'Hit!!', (40, 400), font, 3,
+        cv2.putText(frame_contour, 'Hit!!', (x_pos, y_pos), font, 2,
                     (0, 255, 0), 2, cv2.LINE_AA)
     elif result == 2:
-        cv2.putText(frame_contour, 'Stand!!', (40, 400), font, 3,
+        cv2.putText(frame_contour, 'Stand!!', (x_pos, y_pos), font, 2,
                     (0, 255, 0), 2, cv2.LINE_AA)
     else:
-        cv2.putText(frame_contour, 'Sign not recognised', (40, 400),
-                    font, 2,
+        cv2.putText(frame_contour, 'Sign not recognised', (x_pos, y_pos),
+                    font, 1.5,
                     (0, 0, 255), 2, cv2.LINE_AA)
 
     return frame_contour

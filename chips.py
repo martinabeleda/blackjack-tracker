@@ -7,10 +7,9 @@ import copy
 import math
 import numpy as np
 import display as dp
-from matplotlib import pyplot as plt
 
 ### Constants
-MAX_NORM_DIFF = 0.17
+MAX_NORM_DIFF = 0.2
 MIN_CHIP_AREA = 1000
 MAX_CHIP_AREA = 8000
 
@@ -39,12 +38,10 @@ def detect(image):
 
     # Threshold with Otsu's method
     (_, thresh) = cv2.threshold(blur, 0, 255, cv2.THRESH_BINARY+cv2.THRESH_OTSU)
-    #cv2.imshow("Thresholded playing area", thresh); cv2.waitKey(0); cv2.destroyAllWindows()
 
     # Morphological closing
     kernel = cv2.getStructuringElement(cv2.MORPH_ELLIPSE, (10,10))
     closing = cv2.morphologyEx(thresh, cv2.MORPH_CLOSE, kernel)
-    #cv2.imshow("Closing", closing); cv2.waitKey(0); cv2.destroyAllWindows()
 
     # Find contours and sort by size
     (_, cnts, hier) = cv2.findContours(closing, cv2.RETR_TREE, cv2.CHAIN_APPROX_SIMPLE)
@@ -76,11 +73,6 @@ def detect(image):
             diff = abs(r1-r2)
             norm_diff = diff/np.mean([r1, r2])
 
-            # print('area = {}, norm diff = {}'.format(area, norm_diff))
-            # img_disp = copy.deepcopy(image)
-            # cv2.drawContours(img_disp, [cnts_sort[i]], 0, dp.CYAN, 3)
-            # cv2.imshow("Detected Chips", img_disp); cv2.waitKey(0); cv2.destroyAllWindows()
-
             # Circles have similar radii due to area and perimeter.    
             # Chip contours should have no parents.
             if ((norm_diff < MAX_NORM_DIFF) and ((hier_sort[i][3] == -1))
@@ -107,7 +99,6 @@ def display(image, all_chips):
 
     for i in range(len(all_chips)):
         
-        #cv2.drawContours(image, [all_chips[i].contour], 0, dp.CYAN, 2)
         cv2.circle(image, all_chips[i].center, all_chips[i].radius, dp.CYAN, 2)
 
     return image

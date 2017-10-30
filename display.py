@@ -43,7 +43,7 @@ def regions(image, surface_obj, bg=True):
     return
 
 
-def hand_values(image, surface_obj, cards, bg=True, padded=True):
+def hand_values(image, surface_obj, cards, state, bg=True, padded=True):
     dealer_tally = 0
     dealer_aces = 0
     player_tally = 0
@@ -101,6 +101,89 @@ def hand_values(image, surface_obj, cards, bg=True, padded=True):
                 cv2.FONT_HERSHEY_SIMPLEX, 2, (0, 0, 0), 2, cv2.LINE_AA)
     cv2.putText(image, val_disp_2, (surface_obj.dealer_region[1] + x_offset, y_offset),
                 cv2.FONT_HERSHEY_SIMPLEX, 2, (255, 255, 255), 2, cv2.LINE_AA)
+
+    blackjack = 21
+
+    if dealer_tally == blackjack and state == 0:
+        x_pos = int(surface_obj.dealer_region[1] / 4)
+        y_pos = int(image.shape[0] / 2)
+        overlay = deepcopy(image)
+        cv2.rectangle(overlay, (x_pos - 20, y_pos - 60),
+                      (x_pos + 390, y_pos + 20), (0, 0, 0),
+                      -1)
+        alpha = 0.6
+        cv2.addWeighted(overlay, alpha, image, 1 - alpha,
+                        0, image)
+        text = 'BLACKJACK!'
+        cv2.putText(image, text,
+                    (x_pos + shadow_offset, y_pos + shadow_offset),
+                    cv2.FONT_HERSHEY_SIMPLEX, 2, (255, 255, 255), 2,
+                    cv2.LINE_AA)
+        cv2.putText(image, text, (x_pos, y_pos),
+                    cv2.FONT_HERSHEY_SIMPLEX, 2, (0, 0, 255), 2,
+                    cv2.LINE_AA)
+
+    if player_tally == blackjack and state == 0:
+        x_pos = int(surface_obj.player_region[1] / 8 +
+                    surface_obj.dealer_region[1])
+        y_pos = int(image.shape[0] / 2)
+        overlay = deepcopy(image)
+        cv2.rectangle(overlay, (x_pos - 20, y_pos - 60),
+                      (x_pos + 390, y_pos + 20), (0, 0, 0),
+                      -1)
+        alpha = 0.6
+        cv2.addWeighted(overlay, alpha, image, 1 - alpha,
+                        0, image)
+        text = 'BLACKJACK!'
+        cv2.putText(image, text,
+                    (x_pos + shadow_offset, y_pos + shadow_offset),
+                    cv2.FONT_HERSHEY_SIMPLEX, 2, (255, 255, 255), 2,
+                    cv2.LINE_AA)
+        cv2.putText(image, text, (x_pos, y_pos),
+                    cv2.FONT_HERSHEY_SIMPLEX, 2, (0, 0, 255), 2,
+                    cv2.LINE_AA)
+
+    bust = 22
+
+    if dealer_tally >= bust and state == 0:
+        x_pos = int(surface_obj.dealer_region[1] / 3)
+        y_pos = int(image.shape[0] / 2)
+        overlay = deepcopy(image)
+        cv2.rectangle(overlay, (x_pos - 20, y_pos - 60),
+                      (x_pos + 200, y_pos + 20), (0, 0, 0),
+                      -1)
+        alpha = 0.6
+        cv2.addWeighted(overlay, alpha, image, 1 - alpha,
+                        0, image)
+        text = 'BUST!'
+        cv2.putText(image, text,
+                    (x_pos + shadow_offset, y_pos + shadow_offset),
+                    cv2.FONT_HERSHEY_SIMPLEX, 2, (255, 255, 255), 2,
+                    cv2.LINE_AA)
+        cv2.putText(image, text, (x_pos, y_pos),
+                    cv2.FONT_HERSHEY_SIMPLEX, 2, (0, 0, 255), 2,
+                    cv2.LINE_AA)
+
+    if player_tally >= bust and state == 0:
+        x_pos = int(surface_obj.player_region[1] / 6 +
+                    surface_obj.dealer_region[1])
+        y_pos = int(image.shape[0] / 2)
+        overlay = deepcopy(image)
+        cv2.rectangle(overlay, (x_pos - 20, y_pos - 60),
+                      (x_pos + 200, y_pos + 20), (0, 0, 0),
+                      -1)
+        alpha = 0.6
+        cv2.addWeighted(overlay, alpha, image, 1 - alpha,
+                        0, image)
+        text = 'BUST!'
+        cv2.putText(image, text,
+                    (x_pos + shadow_offset, y_pos + shadow_offset),
+                    cv2.FONT_HERSHEY_SIMPLEX, 2, (255, 255, 255), 2,
+                    cv2.LINE_AA)
+        cv2.putText(image, text, (x_pos, y_pos),
+                    cv2.FONT_HERSHEY_SIMPLEX, 2, (0, 0, 255), 2,
+                    cv2.LINE_AA)
+
     return
 
 
@@ -117,16 +200,16 @@ def bet(image, surface_obj, chips, chip_value=5, bg=True, padded=True):
     if bg:
         overlay = deepcopy(image)
         cv2.rectangle(overlay, (surface_obj.player_region[1] - 290,
-                                surface_obj.player_region[0] - 120),
+                                image.shape[0]),
                       (surface_obj.player_region[1],
-                       surface_obj.player_region[0]), (0, 0,
+                       image.shape[0] - 80), (0, 0,
                                                                      0), -1)
         alpha = 0.3
         cv2.addWeighted(overlay, alpha, image, 1 - alpha,
                         0, image)
     # Setup offsets for bet amount printing
     x_offset = surface_obj.player_region[1] - 260
-    y_offset = surface_obj.player_region[0] - 50
+    y_offset = image.shape[0] - 20
     shadow_offset = 2
     # Add the bet amount to the display
     cv2.putText(image, bet_disp, (x_offset + shadow_offset, y_offset +

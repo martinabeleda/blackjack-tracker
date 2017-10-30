@@ -62,35 +62,49 @@ def videoTest():
 
                 # Add dealer and player regions to the displayed surface
                 display.regions(img_disp, playing_surface)
-                display.hand_values(img_disp, playing_surface, all_cards)
+                display.hand_values(img_disp, playing_surface, all_cards, state)
                 display.bet(img_disp, playing_surface, all_chips)
 
-                cv2   .imshow("Detected Cards and Chips", img_disp)
-                cv2.moveWindow("Detected Cards and Chips", 50, 50)
+                cv2.imshow("Blackjack Tracker", img_disp)
+                cv2.moveWindow("Blackjack Tracker", 50, 50)
 
                 key = cv2.waitKey(delay=1)
 
                 if key == ord('t'):
-                    cv2.destroyAllWindows()
+                    # cv2.destroyAllWindows()
                     state = not state
+                elif key == ord('c'):
+                    playing_surface = surface.get_surface(cap, 10)
+                    # print('Recalibration failed. No successful transform found')
+                    # if playing_surface is None: exit(0)
                 elif key == ord('q'):
                     break
 
             # Gesture recognition state            
             elif state == 1:
-                frame_contour = gesture.detect(transformed)
+                frame_contour = gesture.detect(transformed, playing_surface)
+
+                # Add dealer and player regions to the displayed surface
+                display.regions(frame_contour, playing_surface)
+                display.hand_values(frame_contour, playing_surface,
+                                    all_cards, state)
+                display.bet(frame_contour, playing_surface, all_chips)
 
                 # Show final image with contour
                 # cv2.namedWindow("Gesture Recognition", cv2.WINDOW_NORMAL)
-                cv2.imshow("Gesture Recognition", frame_contour)
-                cv2.resizeWindow("Gesture Recognition", 700, 700)
-                cv2.moveWindow("Gesture Recognition", 50, 50)
+                cv2.imshow("Blackjack Tracker", frame_contour)
+                # cv2.resizeWindow("Gesture Recognition", 700, 700)
+                cv2.moveWindow("Blackjack Tracker", 50, 50)
 
                 key = cv2.waitKey(delay=1)
 
                 if key == ord('t'):
-                    cv2.destroyAllWindows()
+                    # cv2.destroyAllWindows()
                     state = not state
+                elif key == ord('c'):
+                    playing_surface = surface.get_surface(cap, 10)
+                    # print('Recalibration failed. No successful transform found')
+                    # if playing_surface is None: exit(0)
                 elif key == ord('q'):
                     break
 
