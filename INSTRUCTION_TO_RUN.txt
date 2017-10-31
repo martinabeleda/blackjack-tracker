@@ -12,6 +12,8 @@ cd "wherever this readme file is, that's the top directory"
 source blackjack_env/bin/activate
 # you should now see (blackjack_env) at the front of your command line
 
+# skip line 17 to 37 if you've already done the linking of OpenCV
+
 # find the location of OpenCV python binary (cv2.so) on your machine
 find /usr/local/lib/ -type f -name "cv2*.so"
 
@@ -26,7 +28,7 @@ find /usr/local/lib/ -type f -name "cv2*.so"
 rm -f cv2*.so
 
 # create a symbolic link to OpenCV in your local machine
-ln -s "the file location copied above in line 21"
+ln -s "the file location copied above in line 23"
 
 # (Optional) to test if opencv is linked correctly
 python
@@ -42,6 +44,7 @@ deactivate
 
 ********************************************************************************
 Additional Notes:
+- This program only works on Python3
 - It is assumed that the external webcam is plugged in and is the second webcam 
 on your machine. If for some reason this is not the case, please manually edit 
 line26 in main.py to change the index number of the device.
