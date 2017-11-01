@@ -2,11 +2,13 @@
 Blackjack game tracker using OpenCV and Python
 
 ## Download
-Clone the repository or download zip:
+Clone the repository: 
 ```
 git clone https://github.com/martinabeleda/Blackjack-Tracker
-
-https://github.com/martinabeleda/Blackjack-Tracker/archive/virtual_env.zip
+```
+or download zip:
+```
+https://github.com/martinabeleda/Blackjack-Tracker/archive/master.zip
 ```
 ## Usage instruction
 
