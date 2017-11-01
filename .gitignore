@@ -8,7 +8,7 @@
 
 # Include the root folder
 !*/
-!/blackjack_env
+!/blackjack_env/**
 
 # Include the markdown files (e.g. readme.md)
 !*.md
