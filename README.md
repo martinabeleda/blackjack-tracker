@@ -5,33 +5,21 @@ Blackjack game tracker using OpenCV and Python
 Clone the repository or download zip:
 ```
 git clone https://github.com/martinabeleda/Blackjack-Tracker
+
+https://github.com/martinabeleda/Blackjack-Tracker/archive/virtual_env.zip
 ```
 ## Usage instruction
-Plug in the external webcam, wait for about 30 seconds for the device to be recognized.
-
-Navigate to the top directory of the project:
-```
-cd Blackjack-Tracker
-```
-
-Work on the virtual environment included in this folder.
-
-To activate:
-```
-source blackjack_env/bin/activate
-```
-You should now see (blackjack_env) at the front of your command line.
-
-To deactivate:
-```
-deactivate
-```
 
 ### Create a symbolic link to OpenCV on your machine
 Note 1 : Skip this section if you've already created this symbolic link
 
 Note 2: You need to have OpenCV compiled on your machine for python 3. If you haven't, I would recommend this link:
 https://www.learnopencv.com/install-opencv3-on-ubuntu/
+
+Navigate to the top directory of the project:
+```
+cd Blackjack-Tracker
+```
 
 Find the location of OpenCV python binary (cv2.so) on your machine
 ```
@@ -54,10 +42,30 @@ ln -s "the file path copied above"
 ```
 
 ### Run
+Plug in the external webcam, wait for about 30 seconds for the device to be recognized.
+
+Navigate to the top directory of the project:
+```
+cd Blackjack-Tracker
+```
+
+Work on the virtual environment included in this folder.
+
+To activate:
+```
+source blackjack_env/bin/activate
+```
+You should now see (blackjack_env) at the front of your command line.
+
 Run the program with optional argument to indicate which camera to use (default: 0). Index 0 is usually the webcam on your laptop, and index 1 is an external webcam.
 ```
 python3 main.py
 python3 main.py -camera 1
+```
+
+To deactivate:
+```
+deactivate
 ```
 
 ## About the program:

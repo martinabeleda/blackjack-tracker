@@ -76,8 +76,8 @@ def videoTest():
                 display.hand_values(img_disp, playing_surface, all_cards, state)
                 display.bet(img_disp, playing_surface, all_chips)
 
-                cv2.imshow("Blackjack Tracker", img_disp)
-                cv2.moveWindow("Blackjack Tracker", 50, 50)
+                cv2.imshow("Blackjack Tracker", imutils.resize(img_disp, height=600))
+                cv2.moveWindow("Blackjack Tracker", 0, 0)
 
                 key = cv2.waitKey(delay=1)
 
