@@ -24,7 +24,7 @@ You should now see (blackjack_env) at the front of your command line.
 
 To deactivate:
 ```
-Deactivate
+deactivate
 ```
 
 ### Create a symbolic link to OpenCV on your machine
