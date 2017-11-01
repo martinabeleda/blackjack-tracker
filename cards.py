@@ -190,7 +190,7 @@ def display(image, all_cards):
             cnt_col = dp.RED
         else:
             cnt_col = dp.GREEN
-        
+
         cv2.drawContours(image, [all_cards[i].contour], 0, cnt_col, 2)
         text_pos = (all_cards[i].center[0]-20, all_cards[i].center[1])
         cv2.putText(image, all_cards[i].best_rank_match, (text_pos[0] + 2,

@@ -71,7 +71,11 @@ def detect(image):
 
             # Normalise the difference
             diff = abs(r1-r2)
-            norm_diff = diff/np.mean([r1, r2])
+            mean_diff = np.mean([r1, r2])
+            if mean_diff == 0:
+                norm_diff = MAX_NORM_DIFF + 1
+            else:
+                norm_diff = diff/mean_diff
 
             # Circles have similar radii due to area and perimeter.    
             # Chip contours should have no parents.
