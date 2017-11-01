@@ -6,6 +6,7 @@ import cv2
 import copy
 import imutils
 import display
+import argparse
 
 ### Import own libraries ###
 import surface
@@ -22,8 +23,18 @@ font = cv2.FONT_HERSHEY_SIMPLEX
 def videoTest():
     """ Run the blackjack program on a webcam """
 
+    # Command line input to specify the camera index to use
+    parser = argparse.ArgumentParser(
+        description='Blackjack tracker')
+    parser.add_argument('-camera', action='store', type = int,
+                        dest='cam_index',
+                        default=0,
+                        help='Specify the camera index (0,1,2,...)',
+                        )
+    args = parser.parse_args()
+
     # set up the camera and set max resolution
-    cap = cv2.VideoCapture(1)
+    cap = cv2.VideoCapture(args.cam_index)
     cap.set(cv2.CAP_PROP_FRAME_WIDTH, 9999)
     cap.set(cv2.CAP_PROP_FRAME_HEIGHT, 9999)
 
