@@ -14,12 +14,13 @@ Navigate to the top directory of the project:
 cd Blackjack-Tracker
 ```
 
-Work on the virtual environment included in this folder
+Work on the virtual environment included in this folder.
+
 To activate:
 ```
 source blackjack_env/bin/activate
 ```
-You should now see (blackjack_env) at the front of your command line
+You should now see (blackjack_env) at the front of your command line.
 
 To deactivate:
 ```
@@ -27,7 +28,7 @@ Deactivate
 ```
 
 ### Create a symbolic link to OpenCV on your machine
-Note 1 : Skip this section if you've done this before
+Note 1 : Skip this section if you've already created this symbolic link
 
 Note 2: You need to have OpenCV compiled on your machine for python 3. If you haven't, I would recommend this link:
 https://www.learnopencv.com/install-opencv3-on-ubuntu/
@@ -49,14 +50,29 @@ rm -f cv2*.so
 
 Create a symbolic link to OpenCV on your local machine
 ```
-ln -s "the file path above"
+ln -s "the file path copied above"
 ```
 
-### Run the program
+### Run
+Run the program with optional argument to indicate which camera to use (default: 0). Index 0 is usually the webcam on your laptop, and index 1 is an external webcam.
 ```
 python3 main.py
+python3 main.py -camera 1
 ```
 
+## About the program:
+* This program only works on Python 3
+* OpenCV version 3.0 and above is recommended.
+* This program only works in the virtal environment included. Alternatively, if you wish to run them in your local virtual environment, you can install the requirements included:
+```
+pip3 install -r requirements.txt
+```
+* Program starts in the calibration stage with 100 seconds countdown 
+* Press 'a' if you're happy with the transformation found
+* Program enters card recognition state.
+* Press 't' to toggle between gesture state and card recognition state.
+* Press 'c' to recalibrate and 'a' to accept the calibration
+* Press 'q' to quit the program
 
 ## Live demo
 <a href="http://www.youtube.com/watch?feature=player_embedded&v=uAGf70MoNyM
